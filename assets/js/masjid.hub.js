@@ -32,6 +32,7 @@ let takmirSelectedPackage = 'basic';
 let takmirRegistration = null;
 let takmirLocationWatchId = null;
 let takmirLocationWatchTimeoutId = null;
+let packageModalMode = 'profile';
 let selectedMosqueIdPersisted = null;
 let adminPanelOpen = false;
 let adminTheme = 'default';
@@ -1478,7 +1479,7 @@ function renderMosques(list) {
 
 function mosqueTpl(m) {
   return `
-  <div class="mosque-card" onclick="selectMosque(${m.id})">
+  <div class="mosque-card">
     <div class="p-4 flex items-start gap-4">
       <div class="w-16 h-16 rounded-2xl flex-shrink-0 flex items-center justify-center text-3xl" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0);">${m.icon}</div>
       <div class="flex-1 min-w-0">
@@ -1494,8 +1495,11 @@ function mosqueTpl(m) {
         <div class="flex gap-1.5 mt-2 flex-wrap">
           ${m.tags.map(t=>`<span class="badge badge-green">${t}</span>`).join('')}
         </div>
+        <div class="flex gap-2 mt-3 flex-wrap">
+          <button onclick="viewMosqueProfileFromList(${m.id})" class="btn-outline px-3 py-2 text-xs rounded-xl" style="border:none;cursor:pointer;font-family:'Outfit',sans-serif;">Profil</button>
+          <button onclick="selectMosque(${m.id})" class="btn-primary px-4 py-2 text-xs rounded-xl" style="border:none;cursor:pointer;font-family:'Outfit',sans-serif;">Pilih Masjid</button>
+        </div>
       </div>
-      <button class="btn-primary px-4 py-2 text-xs flex-shrink-0 rounded-xl">Pilih</button>
     </div>
   </div>`;
 }
@@ -1535,20 +1539,31 @@ function locateMe() {
 }
 
 function selectMosque(id) {
-  if (!isLoggedIn) {
-    showNotif('Silakan login sebagai jamaah terlebih dahulu.', 'error');
-    openLoginPortal();
-    return;
-  }
-  activeRole = 'jamaah';
-  adminPanelOpen = false;
   selectedMosque = MOSQUES.find(m => m.id === id);
   if (!selectedMosque) return;
+
+  if (isLoggedIn && activeRole !== 'takmir') {
+    activeRole = 'jamaah';
+  }
+  adminPanelOpen = false;
   savePersistentState();
   initApp();
   updateAdminModeUI();
   showScreen('app-screen');
-  showNotif(`${selectedMosque.name} berhasil dipilih.`, 'success');
+  showNotif(
+    isLoggedIn
+      ? `${selectedMosque.name} berhasil dipilih. Fitur interaktif siap digunakan.`
+      : `${selectedMosque.name} dibuka dalam mode publik. Login diperlukan untuk donasi dan aksi fitur lainnya.`,
+    'success'
+  );
+}
+
+function viewMosqueProfileFromList(id) {
+  const mosqueId = Number(id);
+  const mosque = MOSQUES.find(item => Number(item.id) === mosqueId);
+  if (!mosque) return;
+  selectedMosque = mosque;
+  openPackageModal('profile');
 }
 
 function initMosqueMap() {
@@ -1606,17 +1621,31 @@ function viewMosqueProfileFromMap(id) {
   const mosque = MOSQUES.find(item => Number(item.id) === mosqueId);
   if (!mosque) return;
   selectedMosque = mosque;
-  openPackageModal();
+  openPackageModal('profile');
 }
 
-function openPackageModal() {
+function openPackageModal(mode = 'profile') {
   if (!selectedMosque) return;
+  packageModalMode = mode;
   document.getElementById('package-mosque-name').textContent = selectedMosque.name;
+  const titleEl = document.getElementById('package-modal-title');
+  const iconEl = document.getElementById('package-modal-icon');
+  const selectionPanel = document.getElementById('package-selection-panel');
   const imageEl = document.getElementById('package-mosque-image');
   const descEl = document.getElementById('package-mosque-description');
   const factsEl = document.getElementById('package-mosque-facts');
   const tagsEl = document.getElementById('package-mosque-tags');
   const eventsEl = document.getElementById('package-mosque-events');
+
+  if (titleEl) {
+    titleEl.textContent = packageModalMode === 'profile' ? 'Profil Masjid' : 'Pilih Paket Masjid';
+  }
+  if (iconEl) {
+    iconEl.textContent = packageModalMode === 'profile' ? '🕌' : '📦';
+  }
+  if (selectionPanel) {
+    selectionPanel.classList.toggle('hidden', packageModalMode === 'profile');
+  }
 
   if (imageEl) {
     imageEl.src = getSafeMosqueImage(selectedMosque);
@@ -1655,11 +1684,14 @@ function openPackageModal() {
     }
   }
 
-  setPackage('basic');
+  if (packageModalMode !== 'profile') {
+    setPackage('basic');
+  }
   document.getElementById('package-modal').classList.remove('hidden');
 }
 
 function closePackageModal() {
+  packageModalMode = 'profile';
   document.getElementById('package-modal').classList.add('hidden');
 }
 
@@ -1710,12 +1742,31 @@ function confirmPackageSelection() {
 
 function changeMosque() {
   closePackageModal();
-  if (!isLoggedIn) {
-    showScreen('login-screen');
-    return;
-  }
   showScreen('mosque-screen');
   ensureMosqueSelectorReady();
+}
+
+function promptLoginForSelectedMosque(actionLabel = 'melanjutkan aktivitas ini') {
+  if (!selectedMosque) {
+    openLoginPortal();
+    return;
+  }
+
+  const loginName = document.getElementById('login-mosque-name');
+  const loginAddr = document.getElementById('login-mosque-addr');
+  const loginIcon = document.getElementById('login-mosque-icon');
+  const loginPackage = document.getElementById('login-selected-package');
+
+  if (loginName) loginName.textContent = selectedMosque.name;
+  if (loginAddr) loginAddr.textContent = selectedMosque.address;
+  if (loginIcon) loginIcon.textContent = selectedMosque.icon;
+  if (loginPackage) {
+    const pkg = String(selectedMosque.package || 'basic').toUpperCase();
+    loginPackage.textContent = `Masjid terpilih: ${selectedMosque.name} • Paket ${pkg}`;
+  }
+
+  showScreen('login-screen');
+  showNotif(`Login jamaah terlebih dahulu untuk ${actionLabel} di ${selectedMosque.name}.`, 'info');
 }
 
 // ── LOGIN ─────────────────────────────────────────────────────────
@@ -1738,9 +1789,15 @@ function doLogin(type) {
     savePersistentState();
     updateAuthUI();
     updateAdminModeUI();
-    ensureMosqueSelectorReady();
-    showScreen('mosque-screen');
-    showNotif(`Selamat datang, ${currentUser.name}. Pilih masjid untuk melanjutkan.`, 'success');
+    if (selectedMosque) {
+      initApp();
+      showScreen('app-screen');
+      showNotif(`Selamat datang, ${currentUser.name}. Anda masuk ke ${selectedMosque.name}.`, 'success');
+    } else {
+      ensureMosqueSelectorReady();
+      showScreen('mosque-screen');
+      showNotif(`Selamat datang, ${currentUser.name}. Pilih masjid untuk melanjutkan.`, 'success');
+    }
   }, 1500);
 }
 
@@ -2591,7 +2648,7 @@ function navigate(page) {
   }
   
   // Jamaah feature gating (based on mosque package)
-  if (isLoggedIn && activeRole === 'jamaah' && selectedMosque) {
+  if (selectedMosque && activeRole !== 'takmir') {
     const jamaahFeatures = getJamaahAvailableFeatures();
     const featureRequired = PAGE_FEATURE_MAP[page] || page;
     if (!jamaahFeatures.includes(featureRequired)) {
@@ -2981,6 +3038,15 @@ function renderLaporan() {
 
 // ── MODALS ────────────────────────────────────────────────────────
 function openDonationModal(type) {
+  if (!selectedMosque) {
+    showNotif('Pilih masjid terlebih dahulu.', 'error');
+    showScreen('mosque-screen');
+    return;
+  }
+  if (!isLoggedIn || activeRole !== 'jamaah') {
+    promptLoginForSelectedMosque('berdonasi');
+    return;
+  }
   document.getElementById('modal-donate-title').textContent = type;
   document.getElementById('modal-donate-mosque').textContent = selectedMosque?.name;
   const icons = { 'Zakat Maal':'💰', 'Infaq Pembangunan':'🕌', 'Sedekah Jumat':'🍱', 'Wakaf Produktif':'🌱' };
@@ -3061,6 +3127,20 @@ function processCheckIn(activity) {
 function closeSuccessModal() { document.getElementById('success-modal').classList.add('hidden'); }
 
 function registerEvent(idx) {
+  if (!selectedMosque) {
+    showNotif('Pilih masjid terlebih dahulu.', 'error');
+    showScreen('mosque-screen');
+    return;
+  }
+  if (!getJamaahAvailableFeatures().includes('kajian')) {
+    showNotif(`Kajian belum tersedia di paket ${String(selectedMosque.package || 'basic').toUpperCase()} untuk ${selectedMosque.name}.`, 'info');
+    return;
+  }
+  if (!isLoggedIn || activeRole !== 'jamaah') {
+    promptLoginForSelectedMosque('mengikuti kajian');
+    return;
+  }
+
   const usingMosqueCatalog = selectedMosque && MOSQUE_EVENT_CATALOG[selectedMosque.id];
 
   if (usingMosqueCatalog) {
@@ -3102,6 +3182,19 @@ function applyVolunteer(role) {
 }
 
 function bookRoom(name) {
+  if (!selectedMosque) {
+    showNotif('Pilih masjid terlebih dahulu.', 'error');
+    showScreen('mosque-screen');
+    return;
+  }
+  if (!getJamaahAvailableFeatures().includes('booking')) {
+    showNotif(`Booking ruangan belum tersedia di paket ${String(selectedMosque.package || 'basic').toUpperCase()} untuk ${selectedMosque.name}.`, 'info');
+    return;
+  }
+  if (!isLoggedIn || activeRole !== 'jamaah') {
+    promptLoginForSelectedMosque('booking ruangan');
+    return;
+  }
   showNotif(`📅 Permintaan booking "${name}" dikirim! Menunggu konfirmasi pengurus.`, 'success');
 }
 
