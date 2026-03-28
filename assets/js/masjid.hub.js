@@ -11,6 +11,7 @@ let ROOMS = [];
 let PRAYERS = [];
 let BADGES = [];
 let MOSQUE_EVENT_CATALOG = {};
+let DEPLOY_DEFAULT_TAKMIR = null;
 
 // ── STATE ─────────────────────────────────────────────────────────
 let selectedMosque = null;
@@ -29,6 +30,8 @@ let isLoggedIn = false;
 let activeRole = null;
 let takmirSelectedPackage = 'basic';
 let takmirRegistration = null;
+let takmirLocationWatchId = null;
+let takmirLocationWatchTimeoutId = null;
 let selectedMosqueIdPersisted = null;
 let adminPanelOpen = false;
 let adminTheme = 'default';
@@ -358,6 +361,9 @@ function applyAppData(data = {}) {
   if (data.mosqueEventCatalog && typeof data.mosqueEventCatalog === 'object') {
     MOSQUE_EVENT_CATALOG = data.mosqueEventCatalog;
   }
+  if (data.defaultTakmirAdmin && typeof data.defaultTakmirAdmin === 'object') {
+    DEPLOY_DEFAULT_TAKMIR = { ...data.defaultTakmirAdmin };
+  }
   if (data.streak && typeof data.streak === 'object') {
     streak = {
       current: data.streak.current ?? streak.current,
@@ -381,6 +387,7 @@ function getSerializableAppData() {
     prayers: PRAYERS,
     badges: BADGES,
     streak,
+    defaultTakmirAdmin: DEPLOY_DEFAULT_TAKMIR,
     mosqueEventCatalog: MOSQUE_EVENT_CATALOG,
   };
 }
@@ -402,6 +409,119 @@ async function loadAppData() {
 
 function formatRupiah(amount) {
   return `Rp${Math.round(amount).toLocaleString('id-ID')}`;
+}
+
+function prependRecentTransactionFromFinance(item = {}, fallbackType = 'in') {
+  const normalizedType = item.type === 'expense' || fallbackType === 'out' ? 'out' : 'in';
+  const transactionEntry = {
+    type: normalizedType,
+    label: item.note || (normalizedType === 'in' ? 'Pemasukan baru' : 'Pengeluaran baru'),
+    amount: Number(item.amount || 0),
+    date: item.date || new Date().toLocaleDateString('id-ID'),
+    time: item.time || '',
+    category: normalizedType === 'in' ? 'Pemasukan Admin' : 'Pengeluaran Admin',
+    icon: normalizedType === 'in' ? '📈' : '📉'
+  };
+
+  TRANSACTIONS.unshift(transactionEntry);
+  TRANSACTIONS = TRANSACTIONS.slice(0, 12);
+  renderRecentTx();
+}
+
+function parseTransactionDateTime(dateValue = '', timeValue = '') {
+  const monthMap = {
+    jan: 0,
+    feb: 1,
+    mar: 2,
+    apr: 3,
+    mei: 4,
+    jun: 5,
+    jul: 6,
+    agu: 7,
+    agt: 7,
+    sep: 8,
+    okt: 9,
+    nov: 10,
+    des: 11,
+  };
+
+  const normalizedDate = String(dateValue || '').trim();
+  const normalizedTime = String(timeValue || '').trim().replace('.', ':');
+  const [hoursRaw, minutesRaw] = normalizedTime.split(':');
+  const hours = Number(hoursRaw);
+  const minutes = Number(minutesRaw);
+
+  const applyTime = (year, month, day) => new Date(
+    year,
+    month,
+    day,
+    Number.isFinite(hours) ? hours : 0,
+    Number.isFinite(minutes) ? minutes : 0,
+    0,
+    0
+  ).getTime();
+
+  const slashMatch = normalizedDate.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (slashMatch) {
+    const day = Number(slashMatch[1]);
+    const month = Number(slashMatch[2]) - 1;
+    const year = Number(slashMatch[3]);
+    return applyTime(year, month, day);
+  }
+
+  const shortMatch = normalizedDate.match(/(?:[A-Za-z]+,\s*)?(\d{1,2})\s+([A-Za-z]{3})/i);
+  if (shortMatch) {
+    const day = Number(shortMatch[1]);
+    const monthKey = shortMatch[2].toLowerCase();
+    const month = monthMap[monthKey];
+    const year = new Date().getFullYear();
+    if (Number.isInteger(month)) {
+      return applyTime(year, month, day);
+    }
+  }
+
+  const timestamp = Date.parse(`${normalizedDate}${normalizedTime ? ` ${normalizedTime}` : ''}`);
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function mapFinanceRecordToRecentTransaction(item = {}) {
+  const normalizedType = item.type === 'expense' ? 'out' : 'in';
+  return {
+    type: normalizedType,
+    label: item.note || (normalizedType === 'in' ? 'Pemasukan baru' : 'Pengeluaran baru'),
+    amount: Number(item.amount || 0),
+    date: item.date || new Date().toLocaleDateString('id-ID'),
+    time: item.time || '',
+    category: normalizedType === 'in' ? 'Pemasukan Admin' : 'Pengeluaran Admin',
+    icon: normalizedType === 'in' ? '📈' : '📉'
+  };
+}
+
+function buildRecentTransactionSignature(item = {}) {
+  return [item.type, item.label, item.amount, item.date, item.time, item.category].join('|');
+}
+
+function getRelevantFinanceTransactions() {
+  if (!takmirRegistration?.paid || !Array.isArray(takmirRegistration.financeRecords)) return [];
+  if (selectedMosque && takmirRegistration.mosqueId && selectedMosque.id !== takmirRegistration.mosqueId) return [];
+
+  return takmirRegistration.financeRecords.map(mapFinanceRecordToRecentTransaction);
+}
+
+function getRecentTransactionsFeed() {
+  const merged = [...getRelevantFinanceTransactions(), ...TRANSACTIONS];
+  const seen = new Set();
+
+  return merged.filter(item => {
+    const signature = buildRecentTransactionSignature(item);
+    if (seen.has(signature)) return false;
+    seen.add(signature);
+    return true;
+  }).sort((left, right) => {
+    const rightTime = parseTransactionDateTime(right.date, right.time);
+    const leftTime = parseTransactionDateTime(left.date, left.time);
+    return rightTime - leftTime;
+  }).slice(0, 12);
 }
 
 function savePersistentState() {
@@ -462,6 +582,73 @@ function loadPersistentState() {
   } catch (_) {}
 }
 
+function buildSeedTakmirRegistration() {
+  const configuredAdmin = DEPLOY_DEFAULT_TAKMIR && typeof DEPLOY_DEFAULT_TAKMIR === 'object'
+    ? DEPLOY_DEFAULT_TAKMIR
+    : null;
+  const preferredMosqueId = Number(configuredAdmin?.mosqueId);
+  const premiumMosque = Number.isFinite(preferredMosqueId)
+    ? MOSQUES.find(mosque => Number(mosque.id) === preferredMosqueId)
+    : MOSQUES.find(mosque => mosque.package === 'premium');
+  if (!premiumMosque) return null;
+
+  return {
+    mosqueId: premiumMosque.id,
+    mosqueName: configuredAdmin?.mosqueName || premiumMosque.name,
+    city: configuredAdmin?.city || premiumMosque.city,
+    address: configuredAdmin?.address || premiumMosque.address,
+    adminName: configuredAdmin?.adminName || 'Ust. Fajar Hidayat',
+    email: configuredAdmin?.email || 'takmir.premium@masjidhub.id',
+    phone: configuredAdmin?.phone || '081390001122',
+    password: configuredAdmin?.password || 'Takmir123!',
+    package: configuredAdmin?.package || premiumMosque.package || 'premium',
+    paid: configuredAdmin?.paid ?? true,
+    lat: Number.isFinite(Number(configuredAdmin?.lat)) ? Number(configuredAdmin.lat) : premiumMosque.lat,
+    lng: Number.isFinite(Number(configuredAdmin?.lng)) ? Number(configuredAdmin.lng) : premiumMosque.lng,
+    mosqueData: { ...premiumMosque },
+    financeRecords: Array.isArray(configuredAdmin?.financeRecords) ? configuredAdmin.financeRecords : [
+      {
+        amount: 15000000,
+        note: 'Infaq Jumat Pekan Ini',
+        date: '28/03/2026',
+        type: 'income',
+        time: '12.30'
+      },
+      {
+        amount: 3250000,
+        note: 'Operasional Harian Masjid',
+        date: '27/03/2026',
+        type: 'expense',
+        time: '09.15'
+      }
+    ],
+    customEvents: Array.isArray(configuredAdmin?.customEvents)
+      ? [...configuredAdmin.customEvents]
+      : Array.isArray(MOSQUE_EVENT_CATALOG[premiumMosque.id])
+      ? [...MOSQUE_EVENT_CATALOG[premiumMosque.id]]
+      : [],
+  };
+}
+
+function isTakmirRegistrationUsable(registration = takmirRegistration) {
+  return !!(
+    registration
+    && typeof registration === 'object'
+    && String(registration.email || '').trim()
+    && String(registration.password || '').trim()
+    && (registration.paid === true || registration.paid === false)
+  );
+}
+
+function ensureSeedTakmirAccount() {
+  if (isTakmirRegistrationUsable()) return;
+  const seededTakmir = buildSeedTakmirRegistration();
+  if (!seededTakmir) return;
+
+  takmirRegistration = seededTakmir;
+  takmirSelectedPackage = seededTakmir.package;
+}
+
 function syncTakmirPaymentUI() {
   const panel = document.getElementById('takmir-payment-panel');
   const bill = document.getElementById('takmir-bill-amount');
@@ -499,7 +686,27 @@ function syncTakmirPaymentUI() {
   }
 }
 
+function getDeployDefaultTakmir() {
+  const seededTakmir = buildSeedTakmirRegistration();
+  return seededTakmir && typeof seededTakmir === 'object' ? seededTakmir : null;
+}
+
+function hydrateDefaultTakmirLoginInfo() {
+  const defaultTakmir = getDeployDefaultTakmir();
+  if (!defaultTakmir) return;
+
+  const mosqueEl = document.getElementById('default-admin-mosque');
+  const emailEl = document.getElementById('default-admin-email');
+  const passwordEl = document.getElementById('default-admin-password');
+
+  if (mosqueEl) mosqueEl.textContent = defaultTakmir.mosqueName || '-';
+  if (emailEl) emailEl.textContent = defaultTakmir.email || '-';
+  if (passwordEl) passwordEl.textContent = defaultTakmir.password || '-';
+}
+
 function hydrateTakmirForm() {
+  hydrateDefaultTakmirLoginInfo();
+
   if (!takmirRegistration) {
     setTakmirPackage(takmirSelectedPackage || 'basic');
     updateTakmirLocationUI();
@@ -528,13 +735,14 @@ function hydrateTakmirForm() {
 function updateTakmirLocationUI() {
   const lat = Number(takmirRegistration?.lat);
   const lng = Number(takmirRegistration?.lng);
+  const accuracy = Number(takmirRegistration?.locationAccuracyMeters);
   const statusEl = document.getElementById('reg-location-status');
   const coordsEl = document.getElementById('reg-location-coords');
   const btnEl = document.getElementById('reg-location-btn');
 
   if (statusEl) {
     statusEl.textContent = Number.isFinite(lat) && Number.isFinite(lng)
-      ? 'Lokasi perangkat sudah terverifikasi.'
+      ? `Lokasi perangkat sudah terverifikasi${Number.isFinite(accuracy) ? ` (akurasi sekitar ${Math.round(accuracy)} m)` : ''}.`
       : 'Lokasi perangkat belum diambil.';
   }
 
@@ -548,7 +756,33 @@ function updateTakmirLocationUI() {
     btnEl.textContent = Number.isFinite(lat) && Number.isFinite(lng)
       ? 'Perbarui Lokasi Device'
       : 'Ambil Lokasi Device';
+    btnEl.disabled = takmirLocationWatchId !== null;
+    btnEl.classList.toggle('opacity-60', takmirLocationWatchId !== null);
+    btnEl.classList.toggle('cursor-not-allowed', takmirLocationWatchId !== null);
   }
+}
+
+function hasValidCoordinates(lat, lng) {
+  return Number.isFinite(Number(lat)) && Number.isFinite(Number(lng));
+}
+
+function getSafeMosqueImage(mosque = {}) {
+  const image = String(mosque.image || '').trim();
+  if (image) return image;
+
+  const fallbackLabel = encodeURIComponent(String(mosque.name || 'Masjid').trim() || 'Masjid');
+  return `https://placehold.co/1200x675/065f46/ffffff?text=${fallbackLabel}`;
+}
+
+function clearTakmirLocationWatcher() {
+  if (takmirLocationWatchId !== null && navigator.geolocation) {
+    navigator.geolocation.clearWatch(takmirLocationWatchId);
+  }
+  if (takmirLocationWatchTimeoutId !== null) {
+    clearTimeout(takmirLocationWatchTimeoutId);
+  }
+  takmirLocationWatchId = null;
+  takmirLocationWatchTimeoutId = null;
 }
 
 function escapeHtml(value) {
@@ -616,11 +850,16 @@ async function reverseGeocodeLocation(lat, lng) {
 
 function buildMosqueMapPopupHtml(mosque = {}) {
   const pkg = String(mosque.package || 'basic').toUpperCase();
+  const image = getSafeMosqueImage(mosque);
   return `
     <div class="map-popup-card">
+      <div class="map-popup-media-wrap">
+        <img class="map-popup-media" src="${escapeHtml(image)}" alt="Foto ${escapeHtml(mosque.name || 'Masjid')}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${escapeHtml(getSafeMosqueImage({ name: mosque.name }))}'">
+        <span class="map-popup-package">${escapeHtml(pkg)}</span>
+      </div>
       <p class="map-popup-title">${escapeHtml(mosque.icon)} ${escapeHtml(mosque.name)}</p>
       <p class="map-popup-address">${escapeHtml(mosque.address)}</p>
-      <p class="map-popup-meta">${escapeHtml(mosque.city)} · Paket ${escapeHtml(pkg)}</p>
+      <p class="map-popup-meta">${escapeHtml(mosque.city)}${mosque.verified ? ' · Terverifikasi' : ''}</p>
       <div class="map-popup-actions">
         <button class="map-popup-btn map-popup-btn-ghost" onclick="viewMosqueProfileFromMap(${Number(mosque.id)})">Lihat Profil</button>
         <button class="map-popup-btn map-popup-btn-primary" onclick="selectMosque(${Number(mosque.id)})">Pilih Masjid</button>
@@ -644,30 +883,71 @@ function requestTakmirDeviceLocation() {
   }
 
   const statusEl = document.getElementById('reg-location-status');
-  if (statusEl) statusEl.textContent = 'Mengambil lokasi perangkat...';
+  clearTakmirLocationWatcher();
 
-  navigator.geolocation.getCurrentPosition(
-    async position => {
-      takmirRegistration.lat = position.coords.latitude;
-      takmirRegistration.lng = position.coords.longitude;
-      takmirRegistration.locationUpdatedAt = Date.now();
-      try {
-        await reverseGeocodeLocation(takmirRegistration.lat, takmirRegistration.lng);
-      } catch (_) {}
+  let bestPosition = null;
+  const finishCapture = async (shouldNotifyError = false) => {
+    clearTakmirLocationWatcher();
+
+    if (!bestPosition) {
+      if (statusEl) statusEl.textContent = 'Gagal mengambil lokasi. Izinkan akses lokasi lalu coba lagi.';
       updateTakmirLocationUI();
-      savePersistentState();
-      showNotif('Lokasi perangkat berhasil disimpan.', 'success');
+      if (shouldNotifyError) {
+        showNotif('Akses lokasi ditolak atau GPS belum stabil. Mohon coba lagi di area terbuka.', 'error');
+      }
+      return;
+    }
+
+    takmirRegistration.lat = bestPosition.coords.latitude;
+    takmirRegistration.lng = bestPosition.coords.longitude;
+    takmirRegistration.locationAccuracyMeters = bestPosition.coords.accuracy;
+    takmirRegistration.locationUpdatedAt = Date.now();
+    takmirRegistration.locationSource = 'device-gps';
+
+    try {
+      await reverseGeocodeLocation(takmirRegistration.lat, takmirRegistration.lng);
+    } catch (_) {}
+
+    updateTakmirLocationUI();
+    savePersistentState();
+    showNotif(`Lokasi perangkat disimpan dengan akurasi sekitar ${Math.round(bestPosition.coords.accuracy)} meter.`, 'success');
+  };
+
+  if (statusEl) statusEl.textContent = 'Mencari titik GPS paling akurat...';
+  updateTakmirLocationUI();
+
+  takmirLocationWatchId = navigator.geolocation.watchPosition(
+    position => {
+      const nextAccuracy = Number(position?.coords?.accuracy);
+      const bestAccuracy = Number(bestPosition?.coords?.accuracy);
+
+      if (!bestPosition || (Number.isFinite(nextAccuracy) && (!Number.isFinite(bestAccuracy) || nextAccuracy < bestAccuracy))) {
+        bestPosition = position;
+      }
+
+      if (statusEl) {
+        statusEl.textContent = Number.isFinite(nextAccuracy)
+          ? `GPS terdeteksi, menyempurnakan akurasi (${Math.round(nextAccuracy)} m)...`
+          : 'GPS terdeteksi, menyempurnakan akurasi...';
+      }
+
+      if (Number.isFinite(nextAccuracy) && nextAccuracy <= 35) {
+        finishCapture(false);
+      }
     },
     () => {
-      if (statusEl) statusEl.textContent = 'Gagal mengambil lokasi. Izinkan akses lokasi lalu coba lagi.';
-      showNotif('Akses lokasi ditolak atau gagal. Mohon izinkan lokasi perangkat.', 'error');
+      finishCapture(true);
     },
     {
       enableHighAccuracy: true,
-      timeout: 12000,
+      timeout: 15000,
       maximumAge: 0,
     }
   );
+
+  takmirLocationWatchTimeoutId = setTimeout(() => {
+    finishCapture(bestPosition === null);
+  }, 9000);
 }
 
 function hasAdminWriteAccess() {
@@ -728,18 +1008,61 @@ function updateAuthUI() {
   updateRoleBadgeUI();
 }
 
+function getAdminPanelContext(page = currentPage) {
+  const contexts = {
+    dashboard: {
+      key: 'dashboard',
+      title: 'Kelola Dashboard Keuangan',
+      description: 'Input pemasukan, pengeluaran, dan tema dashboard langsung dari panel ini.',
+      features: ['dashboard-keuangan'],
+      showTheme: true,
+      buttonLabel: 'Panel Dashboard',
+      iconClass: 'fas fa-chart-line'
+    },
+    kajian: {
+      key: 'kajian',
+      title: 'Kelola Kajian & Event',
+      description: 'Saat halaman Kajian aktif, hanya pengaturan kajian dan event yang ditampilkan.',
+      features: ['kajian'],
+      showTheme: false,
+      buttonLabel: 'Panel Kajian',
+      iconClass: 'fas fa-calendar-check'
+    }
+  };
+
+  return contexts[page] || {
+    key: 'profile',
+    title: 'Kelola Profil Masjid',
+    description: 'Halaman ini menggunakan pengaturan profil masjid agar panel tetap ringkas dan tidak menutupi konten.',
+    features: ['profile'],
+    showTheme: false,
+    buttonLabel: 'Panel Profil',
+    iconClass: 'fas fa-mosque'
+  };
+}
+
 function updateAdminModeUI() {
   const toggle = document.getElementById('admin-live-toggle');
   const panel = document.getElementById('admin-live-panel');
   const appScreen = document.getElementById('app-screen');
   const isAdmin = activeRole === 'takmir' && !!takmirRegistration?.paid;
+  const context = getAdminPanelContext();
+  const contextTitle = document.getElementById('admin-live-context-title');
+  const contextDesc = document.getElementById('admin-live-context-desc');
+  const contextIcon = document.getElementById('admin-live-context-icon');
 
   if (toggle) {
     toggle.classList.toggle('hidden', !isAdmin);
     toggle.classList.toggle('inline-flex', isAdmin);
     toggle.innerHTML = adminPanelOpen
-      ? '<i class="fas fa-sliders-h"></i><span>Tutup Mode Admin</span>'
-      : '<i class="fas fa-sliders-h"></i><span>Mode Admin</span>';
+      ? '<i class="fas fa-sliders-h"></i><span>Tutup Panel</span>'
+      : `<i class="fas fa-sliders-h"></i><span>${context.buttonLabel}</span>`;
+  }
+  if (contextTitle) contextTitle.textContent = context.title;
+  if (contextDesc) contextDesc.textContent = context.description;
+  if (contextIcon) {
+    contextIcon.innerHTML = `<i class="${context.iconClass}"></i>`;
+    contextIcon.setAttribute('data-context', context.key);
   }
   if (panel) {
     panel.classList.toggle('hidden', !(isAdmin && adminPanelOpen));
@@ -748,7 +1071,14 @@ function updateAdminModeUI() {
     }
   }
 
+  ['dashboard', 'kajian', 'profile'].forEach(tabKey => {
+    const tab = document.getElementById(`admin-tab-${tabKey}`);
+    if (!tab) return;
+    tab.classList.toggle('active', tabKey === context.key);
+  });
+
   if (appScreen) {
+    appScreen.classList.toggle('admin-panel-open', isAdmin && adminPanelOpen);
     appScreen.classList.remove('theme-ocean', 'theme-sunset');
     if (adminTheme === 'ocean') appScreen.classList.add('theme-ocean');
     if (adminTheme === 'sunset') appScreen.classList.add('theme-sunset');
@@ -756,16 +1086,32 @@ function updateAdminModeUI() {
 }
 
 function updateAdminPanelFeatureVisibility() {
-  if (!takmirRegistration?.paid) return;
+  const panel = document.getElementById('admin-live-panel');
+  if (!takmirRegistration?.paid || !panel) return;
   const pkg = takmirRegistration.package || 'basic';
   const features = PACKAGE_FEATURES[pkg] || [];
-  
-  document.querySelectorAll('[data-feature]').forEach(card => {
+  const context = getAdminPanelContext();
+  const allowedContextFeatures = context.features || [];
+  let visibleCount = 0;
+
+  panel.querySelectorAll('[data-feature]').forEach(card => {
     const feature = card.getAttribute('data-feature');
-    const canAccess = features.includes(feature);
-    card.classList.toggle('hidden', !canAccess);
-    card.classList.toggle('opacity-50', !canAccess);
+    const canAccessByPackage = features.includes(feature);
+    const matchesContext = allowedContextFeatures.includes(feature);
+    const shouldShow = canAccessByPackage && matchesContext;
+    card.classList.toggle('hidden', !shouldShow);
+    if (shouldShow) visibleCount += 1;
   });
+
+  const themePanel = document.getElementById('admin-panel-theme');
+  if (themePanel) {
+    themePanel.classList.toggle('hidden', !context.showTheme);
+  }
+
+  const emptyState = document.getElementById('admin-live-empty');
+  if (emptyState) {
+    emptyState.classList.toggle('hidden', visibleCount > 0);
+  }
 }
 
 function updateMosquePackageInfoDisplay() {
@@ -832,31 +1178,35 @@ function buildTakmirMosqueData() {
   const registrationLat = Number(takmirRegistration.lat);
   const registrationLng = Number(takmirRegistration.lng);
   const id = takmirRegistration.mosqueId || Date.now();
-  const icon = '🕌';
+  const sourceMosque = MOSQUES.find(m => m.id === id) || previous;
+  const icon = sourceMosque.icon || '🕌';
   return {
     id,
     name: takmirRegistration.mosqueName,
     address: takmirRegistration.address,
     city: takmirRegistration.city,
     icon,
-    color: 'emerald',
-    members: 320,
-    distance: '0.8 km',
-    rating: 4.7,
-    verified: true,
+    color: sourceMosque.color || 'emerald',
+    members: sourceMosque.members || 320,
+    distance: sourceMosque.distance || '0 km',
+    rating: sourceMosque.rating || 4.7,
+    verified: sourceMosque.verified ?? true,
     package: takmirRegistration.package || 'basic',
     lat: Number.isFinite(registrationLat)
       ? registrationLat
-      : (typeof previous.lat === 'number' ? previous.lat : (-6.995 + Math.random() * 0.08)),
+      : (Number.isFinite(Number(previous.lat)) ? Number(previous.lat) : -6.995),
     lng: Number.isFinite(registrationLng)
       ? registrationLng
-      : (typeof previous.lng === 'number' ? previous.lng : (110.425 + Math.random() * 0.08)),
-    image: 'https://placehold.co/1200x675/065f46/ffffff?text=' + encodeURIComponent(takmirRegistration.mosqueName),
-    description: 'Masjid binaan takmir yang baru bergabung di MasjidHub dan sedang mengaktifkan layanan digital jamaah.',
-    tags: ['Masjid Baru', 'Komunitas', 'Digitalisasi'],
-    balance: 25000000,
-    income: 8500000,
-    expense: 4200000,
+      : (Number.isFinite(Number(previous.lng)) ? Number(previous.lng) : 110.425),
+    image: getSafeMosqueImage({ image: sourceMosque.image || previous.image, name: takmirRegistration.mosqueName }),
+    description: sourceMosque.description || 'Masjid binaan takmir yang baru bergabung di MasjidHub dan sedang mengaktifkan layanan digital jamaah.',
+    tags: Array.isArray(sourceMosque.tags) && sourceMosque.tags.length ? sourceMosque.tags : ['Masjid Baru', 'Komunitas', 'Digitalisasi'],
+    balance: sourceMosque.balance || 25000000,
+    income: sourceMosque.income || 8500000,
+    expense: sourceMosque.expense || 4200000,
+    locationAccuracyMeters: Number.isFinite(Number(takmirRegistration.locationAccuracyMeters))
+      ? Number(takmirRegistration.locationAccuracyMeters)
+      : Number(previous.locationAccuracyMeters),
   };
 }
 
@@ -936,6 +1286,7 @@ function updateJamaahUIByPackage() {
 setTimeout(async () => {
   await loadAppData();
   loadPersistentState();
+  ensureSeedTakmirAccount();
   ensureRegisteredMosqueInList();
   if (!selectedMosque && selectedMosqueIdPersisted) {
     selectedMosque = MOSQUES.find(m => m.id === selectedMosqueIdPersisted) || null;
@@ -1225,7 +1576,9 @@ function updateMosqueMap(list) {
 
   const points = [];
   list.forEach(m => {
-    if (typeof m.lat !== 'number' || typeof m.lng !== 'number') return;
+    const lat = Number(m.lat);
+    const lng = Number(m.lng);
+    if (!hasValidCoordinates(lat, lng)) return;
     const markerIcon = L.divIcon({
       className: '',
       html: `<div class="mosque-pin ${m.members >= 3000 ? 'premium' : ''}" title="${m.name}">${m.icon}</div>`,
@@ -1233,10 +1586,10 @@ function updateMosqueMap(list) {
       iconAnchor: [17, 42],
       popupAnchor: [0, -36]
     });
-    const marker = L.marker([m.lat, m.lng], { icon: markerIcon }).addTo(mosqueMap);
+    const marker = L.marker([lat, lng], { icon: markerIcon }).addTo(mosqueMap);
     marker.bindPopup(buildMosqueMapPopupHtml(m));
     mosqueMarkers.push(marker);
-    points.push([m.lat, m.lng]);
+    points.push([lat, lng]);
   });
 
   if (points.length === 1) {
@@ -1249,7 +1602,8 @@ function updateMosqueMap(list) {
 }
 
 function viewMosqueProfileFromMap(id) {
-  const mosque = MOSQUES.find(item => item.id === id);
+  const mosqueId = Number(id);
+  const mosque = MOSQUES.find(item => Number(item.id) === mosqueId);
   if (!mosque) return;
   selectedMosque = mosque;
   openPackageModal();
@@ -1265,8 +1619,12 @@ function openPackageModal() {
   const eventsEl = document.getElementById('package-mosque-events');
 
   if (imageEl) {
-    imageEl.src = selectedMosque.image || 'https://placehold.co/1200x675/064e3b/ffffff?text=Masjid';
+    imageEl.src = getSafeMosqueImage(selectedMosque);
     imageEl.alt = `Foto ${selectedMosque.name}`;
+    imageEl.onerror = () => {
+      imageEl.onerror = null;
+      imageEl.src = getSafeMosqueImage({ name: selectedMosque.name });
+    };
   }
   if (descEl) {
     descEl.textContent = selectedMosque.description || 'Masjid aktif dengan beragam program ibadah dan pemberdayaan jamaah.';
@@ -1811,6 +2169,7 @@ function addAdminIncome() {
     takmirRegistration.financeRecords = [];
   }
   takmirRegistration.financeRecords.unshift(item);
+  prependRecentTransactionFromFinance(item, 'in');
 
   takmirRegistration.mosqueData = {
     ...(takmirRegistration.mosqueData || {}),
@@ -1855,6 +2214,7 @@ function addAdminIncomeLive() {
 
   if (!Array.isArray(takmirRegistration.financeRecords)) takmirRegistration.financeRecords = [];
   takmirRegistration.financeRecords.unshift(item);
+  prependRecentTransactionFromFinance(item, 'in');
 
   takmirRegistration.mosqueData = {
     ...(takmirRegistration.mosqueData || {}),
@@ -1897,6 +2257,7 @@ function addAdminExpenseLive() {
 
   if (!Array.isArray(takmirRegistration.financeRecords)) takmirRegistration.financeRecords = [];
   takmirRegistration.financeRecords.unshift(item);
+  prependRecentTransactionFromFinance(item, 'out');
 
   takmirRegistration.mosqueData = {
     ...(takmirRegistration.mosqueData || {}),
@@ -2259,6 +2620,7 @@ function navigate(page) {
   // Page title
   const titles = { dashboard:'Dashboard', donasi:'Donasi', zcorner:'UMKM Masjid', kajian:'Kajian & Acara', market:'Marketplace', relawan:'Relawan', sholat:'Waktu Sholat', streak:'Streak Kebaikan', laporan:'Laporan Keuangan', riwayat:'Riwayat Donasi', booking:'Booking Ruangan' };
   document.getElementById('page-title').textContent = titles[page] || '';
+  updateAdminModeUI();
   
     // Update mosque package info for jamaah
     updateMosquePackageInfoDisplay();
@@ -2331,7 +2693,7 @@ function initCharts() {
 function renderRecentTx() {
   const el = document.getElementById('recent-tx');
   if (!el) return;
-  el.innerHTML = TRANSACTIONS.map(tx => `
+  el.innerHTML = getRecentTransactionsFeed().map(tx => `
     <div class="tx-item">
       <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0" style="background:${tx.type==='in'?'#d1fae5':'#fee2e2'}">${tx.icon}</div>
       <div class="flex-1 min-w-0">

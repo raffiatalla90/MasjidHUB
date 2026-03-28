@@ -192,6 +192,48 @@
     "longest": 28,
     "total": 156
   },
+  "defaultTakmirAdmin": {
+    "mosqueId": 3,
+    "mosqueName": "Masjid Baiturrahman",
+    "city": "Semarang, Jawa Tengah",
+    "address": "Jl. Pandanaran No. 126, Simpang Lima",
+    "adminName": "Ust. Fajar Hidayat",
+    "email": "takmir.premium@masjidhub.id",
+    "phone": "081390001122",
+    "password": "Takmir123!",
+    "package": "premium",
+    "paid": true,
+    "lat": -6.9904,
+    "lng": 110.4202,
+    "financeRecords": [
+      {
+        "amount": 15000000,
+        "note": "Infaq Jumat Pekan Ini",
+        "date": "28/03/2026",
+        "type": "income",
+        "time": "12.30"
+      },
+      {
+        "amount": 3250000,
+        "note": "Operasional Harian Masjid",
+        "date": "27/03/2026",
+        "type": "expense",
+        "time": "09.15"
+      }
+    ],
+    "customEvents": [
+      {
+        "title": "Kajian Akbar Bulanan",
+        "time": "Ahad, 07:00",
+        "type": "Kajian"
+      },
+      {
+        "title": "Tur Edukasi Sejarah Masjid",
+        "time": "Sabtu, 14:00",
+        "type": "Wisata"
+      }
+    ]
+  },
   "mosqueEventCatalog": {
     "1": [
       { "title": "Kajian Tafsir Rutin", "time": "Kamis, 18:30", "type": "Kajian" },

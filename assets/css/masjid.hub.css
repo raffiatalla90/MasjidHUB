@@ -82,14 +82,167 @@
       grid-template-columns:1fr;
       gap:12px;
     }
+    .admin-live-panel {
+      --admin-panel-width: clamp(320px, 32vw, 408px);
+      position: fixed;
+      top: 84px;
+      right: 20px;
+      bottom: 20px;
+      width: var(--admin-panel-width);
+      margin: 0;
+      z-index: 45;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid rgba(148, 163, 184, .2);
+      box-shadow: 0 20px 50px rgba(15, 23, 42, .18);
+    }
+    .admin-live-panel:hover {
+      transform: none;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, .18);
+    }
+    .admin-live-panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid #e5e7eb;
+      background:
+        radial-gradient(circle at top left, rgba(16,185,129,.16), transparent 42%),
+        linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.96));
+      backdrop-filter: blur(10px);
+    }
+    .admin-live-header-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      min-width: 0;
+    }
+    .admin-live-context-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: #ffffff;
+      background: linear-gradient(135deg, #0f766e, #059669);
+      box-shadow: 0 12px 28px rgba(5, 150, 105, .24);
+      font-size: 16px;
+    }
+    .admin-live-context-icon[data-context="dashboard"] {
+      background: linear-gradient(135deg, #047857, #10b981);
+    }
+    .admin-live-context-icon[data-context="kajian"] {
+      background: linear-gradient(135deg, #0f766e, #0ea5e9);
+    }
+    .admin-live-context-icon[data-context="profile"] {
+      background: linear-gradient(135deg, #334155, #64748b);
+    }
+    .admin-live-header-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      flex-shrink: 0;
+      min-width: 0;
+    }
+    .admin-live-mini-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      padding: 4px;
+      width: min(100%, 240px);
+      border-radius: 999px;
+      background: rgba(241, 245, 249, .95);
+      border: 1px solid rgba(226, 232, 240, .95);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
+    }
+    .admin-live-mini-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .01em;
+      transition: all .2s ease;
+      justify-content: center;
+      min-width: 0;
+      white-space: nowrap;
+    }
+    .admin-live-mini-tab i {
+      font-size: 11px;
+    }
+    .admin-live-mini-tab.active {
+      color: #0f172a;
+      background: #ffffff;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, .08);
+    }
+    .admin-live-close-btn {
+      font-size: 12px;
+      color: #64748b;
+      padding: 6px 10px;
+      border-radius: 999px;
+      transition: all .2s ease;
+    }
+    .admin-live-close-btn:hover {
+      color: #0f172a;
+      background: rgba(226, 232, 240, .7);
+    }
+    .admin-live-panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 18px 18px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
     .admin-live-card {
       border:1px solid #e5e7eb;
       border-radius:12px;
       padding:12px;
-      background:#fafafa;
+      background:#ffffff;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, .05);
+    }
+    .admin-live-empty {
+      border: 1px dashed #cbd5e1;
+      border-radius: 16px;
+      padding: 18px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+    #app-screen.admin-panel-open .main-content {
+      padding-right: calc(clamp(320px, 32vw, 408px) + 40px);
     }
     @media (min-width: 1024px) {
-      .admin-live-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+      .admin-live-grid { grid-template-columns:1fr; }
+    }
+    @media (max-width: 1180px) and (min-width: 769px) {
+      .admin-live-panel {
+        --admin-panel-width: min(348px, calc(100vw - 28px));
+        top: 78px;
+        right: 14px;
+        bottom: 14px;
+      }
+      .admin-live-panel-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .admin-live-header-actions {
+        width: 100%;
+        align-items: stretch;
+      }
+      .admin-live-mini-tabs {
+        width: 100%;
+      }
+      .admin-live-close-btn {
+        align-self: flex-end;
+      }
+      #app-screen.admin-panel-open .main-content {
+        padding-right: calc(min(348px, calc(100vw - 28px)) + 28px);
+      }
     }
 
     #app-screen.theme-ocean {
@@ -387,6 +540,62 @@
       border-radius: 14px;
       padding: 12px;
     }
+    .takmir-default-login-box {
+      border: 1px solid #fde68a;
+      background: linear-gradient(145deg, #fffef5 0%, #fff7ed 100%);
+      border-radius: 16px;
+      padding: 12px;
+    }
+    .takmir-default-login-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .takmir-default-login-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #92400e;
+    }
+    .takmir-default-login-badge {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: #92400e;
+      background: rgba(251, 191, 36, .18);
+      border: 1px solid rgba(245, 158, 11, .28);
+      border-radius: 999px;
+      padding: 4px 8px;
+    }
+    .takmir-default-login-list {
+      display: grid;
+      gap: 8px;
+    }
+    .takmir-default-login-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,.75);
+      border: 1px solid rgba(253, 230, 138, .7);
+      border-radius: 12px;
+      padding: 8px 10px;
+    }
+    .takmir-default-login-label {
+      font-size: 11px;
+      color: #78716c;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+    .takmir-default-login-item strong {
+      font-size: 12px;
+      color: #1f2937;
+      text-align: right;
+      word-break: break-word;
+    }
     @media (min-width: 1024px) {
       .takmir-grid { grid-template-columns:1.15fr .85fr; }
     }
@@ -539,6 +748,30 @@
       min-width: 228px;
       padding: 12px;
       font-family: 'Outfit', sans-serif;
+    }
+    .map-popup-media-wrap {
+      position: relative;
+      margin-bottom: 10px;
+    }
+    .map-popup-media {
+      display: block;
+      width: 100%;
+      height: 112px;
+      object-fit: cover;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #d1fae5, #ecfdf5);
+    }
+    .map-popup-package {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(15, 23, 42, .82);
+      color: #fff;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .08em;
     }
     .map-popup-title {
       font-size: 14px;
@@ -825,8 +1058,74 @@
     /* ── Responsive main layout ── */
     #app-screen { background:var(--cream); display:flex; flex-direction:column; }
     .app-body { display:flex; flex:1; overflow:hidden; }
-    .main-content { flex:1; overflow-y:auto; padding:24px; }
-    @media(max-width:768px) { .main-content { padding:16px; padding-bottom:80px; } .sidebar-desktop { display:none!important; } }
+    .main-content { flex:1; overflow-y:auto; padding:24px; transition: padding-right .25s ease; }
+    @media(max-width:768px) {
+      .main-content { padding:16px; padding-bottom:80px; }
+      .sidebar-desktop { display:none!important; }
+      .admin-live-panel {
+        --admin-panel-width: calc(100vw - 24px);
+        top: auto;
+        right: 12px;
+        left: 12px;
+        bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+        width: auto;
+        max-height: min(74vh, 640px);
+        border-radius: 20px;
+      }
+      .admin-live-panel-header {
+        padding: 16px 16px 12px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+      }
+      .admin-live-header-main {
+        align-items: center;
+      }
+      .admin-live-header-actions {
+        align-items: stretch;
+        width: 100%;
+      }
+      .admin-live-mini-tabs {
+        width: 100%;
+      }
+      .admin-live-mini-tab {
+        padding: 6px 8px;
+        font-size: 10px;
+        gap: 4px;
+      }
+      .admin-live-mini-tab span:last-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .admin-live-panel-body {
+        padding: 14px 16px 16px;
+      }
+      #app-screen.admin-panel-open .main-content {
+        padding-right: 16px;
+      }
+    }
+    @media(max-width:420px) {
+      .admin-live-context-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+      }
+      .admin-live-panel {
+        right: 8px;
+        left: 8px;
+        bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+        max-height: min(76vh, 600px);
+      }
+      .admin-live-panel-header {
+        padding: 14px 14px 10px;
+      }
+      .admin-live-panel-body {
+        padding: 12px 14px 14px;
+      }
+      .admin-live-mini-tab {
+        padding: 6px;
+      }
+    }
     @media(min-width:769px) { .bottom-mobile-nav { display:none!important; } .mobile-sidebar-btn { display:none!important; } }
 
     /* ── Event card ── */
