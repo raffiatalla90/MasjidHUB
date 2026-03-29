@@ -25,16 +25,8 @@
 <div id="splash" class="screen flex flex-col items-center justify-center">
   <div class="geo-pattern absolute inset-0 opacity-30"></div>
   <div class="relative z-10 text-center animate-float">
-    <!-- Logo -->
-    <div class="w-28 h-28 mx-auto mb-6 relative">
-      <div class="w-full h-full rounded-3xl bg-white/10 backdrop-blur-sm border-2 border-white/20 flex items-center justify-center shadow-2xl">
-        <span style="font-size:3.5rem;">🕌</span>
-      </div>
-      <div class="absolute -bottom-2 -right-2 w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg">
-        <i class="fas fa-wifi text-white text-sm"></i>
-      </div>
-    </div>
-    <h1 style="font-family:'Amiri',serif;font-size:2.8rem;color:white;margin-bottom:4px;" class="shimmer-text">MasjidHub</h1>
+    <!-- Brand Logo -->
+    <img src="MasjidHUB-Logo.png" alt="Logo Masjid HUB" class="brand-logo-splash mx-auto mb-6" loading="eager">
     <p class="text-emerald-200 text-sm font-medium tracking-widest uppercase">Platform Digital Ekosistem Masjid</p>
     <div class="mt-10 flex items-center justify-center gap-2">
       <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
@@ -81,14 +73,12 @@
 ═══════════════════════════════════════════ -->
 <div id="mosque-screen" class="screen hidden">
   <!-- Header -->
-  <div class="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
+  <div class="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm mosque-selector-header">
     <div class="max-w-7xl mx-auto px-4 py-4">
       <div class="flex items-center gap-3 mb-4">
-        <div class="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center flex-shrink-0">
-          <span style="font-size:1.1rem;">🕌</span>
-        </div>
+        <img src="MasjidHUB-Logo.png" alt="Logo Masjid HUB" class="brand-logo-header flex-shrink-0" loading="lazy">
         <div>
-          <h1 style="font-family:'Amiri',serif;font-size:1.4rem;font-weight:700;" class="shimmer-text">MasjidHub</h1>
+          <h1 style="font-family:'Amiri',serif;font-size:1.4rem;font-weight:700;" class="text-emerald-900">MasjidHub</h1>
           <p class="text-xs text-gray-400">Pilih masjid Anda untuk memulai</p>
         </div>
         <div class="ml-auto text-xs text-gray-400 flex items-center gap-1">
@@ -172,7 +162,7 @@
 
     <div class="w-full max-w-sm">
       <div class="text-center mb-8">
-        <div class="w-20 h-20 mx-auto mb-4 bg-white/15 rounded-3xl flex items-center justify-center text-4xl border-2 border-white/20 shadow-2xl animate-float">🕌</div>
+        <img src="MasjidHUB-Logo.png" alt="Logo Masjid HUB" class="brand-logo-login mx-auto mb-4 animate-float" loading="lazy">
         <h2 style="font-family:'Amiri',serif;font-size:2rem;color:white;font-weight:700;">Masuk ke MasjidHub</h2>
         <p class="text-emerald-200 text-sm mt-1">Bergabunglah dengan komunitas masjid digital</p>
       </div>
@@ -571,7 +561,7 @@
     <div class="mobile-overlay hidden" id="mobile-overlay" onclick="toggleMobileSidebar()"></div>
     <div class="mobile-sidebar sidebar" id="mobile-sidebar-el" style="height:100vh;top:0;">
       <div class="p-4 flex items-center gap-3 border-b border-white/10">
-        <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-lg">🕌</div>
+        <img src="MasjidHUB-Logo.png" alt="Logo Masjid HUB" class="brand-logo-mobile" loading="lazy">
         <span class="text-white font-bold">MasjidHub</span>
         <button onclick="toggleMobileSidebar()" class="ml-auto text-white/60 hover:text-white" style="background:none;border:none;cursor:pointer;">
           <i class="fas fa-times text-lg"></i>

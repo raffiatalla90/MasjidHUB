@@ -1,5 +1,6 @@
 // ── DATA ──────────────────────────────────────────────────────────
 const APP_DATA_URL = 'assets/data/masjid.hub.data.json';
+const APP_DATA_VERSION = '2026-03-29-nurulhudauns';
 
 let MOSQUES = [];
 let TRANSACTIONS = [];
@@ -15,7 +16,7 @@ let DEPLOY_DEFAULT_TAKMIR = null;
 
 // ── STATE ─────────────────────────────────────────────────────────
 let selectedMosque = null;
-const DEFAULT_CURRENT_USER = { name:'Ahmad Fauzi', role:'Mahasiswa', avatar:'A', email:'', phone:'' };
+const DEFAULT_CURRENT_USER = { name:'Ahmad Nur', role:'Mahasiswa', avatar:'A', email:'', phone:'' };
 let currentUser = { ...DEFAULT_CURRENT_USER };
 let currentPage = 'dashboard';
 let currentTab = 'all';
@@ -25,6 +26,7 @@ let financeChart, pieChart, incomeChart, expenseChart;
 let mosqueMap = null;
 let mosqueMarkers = [];
 let filteredMosques = [];
+let userGeolocation = null;
 let selectedPackage = 'basic';
 let isLoggedIn = false;
 let activeRole = null;
@@ -529,6 +531,7 @@ function savePersistentState() {
   try {
     syncCurrentUserToJamaahAccount();
     const payload = {
+      appDataVersion: APP_DATA_VERSION,
       appData: getSerializableAppData(),
       selectedMosqueId: selectedMosque ? selectedMosque.id : null,
       currentUser,
@@ -554,7 +557,11 @@ function loadPersistentState() {
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object') return;
 
-    if (parsed.appData && typeof parsed.appData === 'object') {
+    if (
+      parsed.appData
+      && typeof parsed.appData === 'object'
+      && parsed.appDataVersion === APP_DATA_VERSION
+    ) {
       applyAppData(parsed.appData);
     }
 
@@ -598,7 +605,7 @@ function buildSeedTakmirRegistration() {
     mosqueName: configuredAdmin?.mosqueName || premiumMosque.name,
     city: configuredAdmin?.city || premiumMosque.city,
     address: configuredAdmin?.address || premiumMosque.address,
-    adminName: configuredAdmin?.adminName || 'Ust. Fajar Hidayat',
+    adminName: configuredAdmin?.adminName || 'Ust Raffi Atalla',
     email: configuredAdmin?.email || 'takmir.premium@masjidhub.id',
     phone: configuredAdmin?.phone || '081390001122',
     password: configuredAdmin?.password || 'Takmir123!',
@@ -1007,6 +1014,59 @@ function updateAuthUI() {
     }
   }
   updateRoleBadgeUI();
+}
+
+function toRadians(degrees) {
+  return (Number(degrees) * Math.PI) / 180;
+}
+
+function calculateDistanceKm(lat1, lng1, lat2, lng2) {
+  const earthRadiusKm = 6371;
+  const dLat = toRadians(lat2 - lat1);
+  const dLng = toRadians(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadiusKm * c;
+}
+
+function formatDistanceLabel(distanceKm) {
+  if (!Number.isFinite(distanceKm) || distanceKm < 0) return '-';
+  if (distanceKm < 1) return `${Math.round(distanceKm * 1000)} m`;
+  return `${distanceKm.toFixed(1)} km`;
+}
+
+function enrichMosquesWithUserDistance(lat, lng) {
+  return MOSQUES.map(mosque => {
+    const mosqueLat = Number(mosque.lat);
+    const mosqueLng = Number(mosque.lng);
+    const hasCoords = hasValidCoordinates(mosqueLat, mosqueLng);
+    const distanceKm = hasCoords ? calculateDistanceKm(lat, lng, mosqueLat, mosqueLng) : Number.POSITIVE_INFINITY;
+
+    return {
+      ...mosque,
+      distanceKm,
+      distance: hasCoords ? formatDistanceLabel(distanceKm) : (mosque.distance || '-'),
+    };
+  }).sort((left, right) => {
+    const leftDistance = Number.isFinite(left.distanceKm) ? left.distanceKm : Number.POSITIVE_INFINITY;
+    const rightDistance = Number.isFinite(right.distanceKm) ? right.distanceKm : Number.POSITIVE_INFINITY;
+    return leftDistance - rightDistance;
+  });
+}
+
+function focusMapOnMosque(mosqueId, options = {}) {
+  if (!mosqueMap || !mosqueMarkers.length) return;
+
+  const { zoom = 15, openPopup = true } = options;
+  const markerEntry = mosqueMarkers.find(item => Number(item.id) === Number(mosqueId));
+  if (!markerEntry) return;
+
+  const latLng = markerEntry.marker.getLatLng();
+  mosqueMap.setView(latLng, zoom, { animate: true });
+  if (openPopup) markerEntry.marker.openPopup();
 }
 
 function getAdminPanelContext(page = currentPage) {
@@ -1515,12 +1575,22 @@ function filterMosques(q) {
   updateMosqueMap(filtered);
 }
 
+function getSortableDistanceKm(mosque = {}) {
+  if (Number.isFinite(Number(mosque.distanceKm))) return Number(mosque.distanceKm);
+
+  const raw = String(mosque.distance || '').trim().toLowerCase();
+  const value = parseFloat(raw);
+  if (!Number.isFinite(value)) return Number.POSITIVE_INFINITY;
+  if (raw.includes(' m')) return value / 1000;
+  return value;
+}
+
 function setTab(btn, tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   currentTab = tab;
   let list = [...MOSQUES];
-  if (tab === 'nearby') list.sort((a,b) => parseFloat(a.distance) - parseFloat(b.distance));
+  if (tab === 'nearby') list.sort((a,b) => getSortableDistanceKm(a) - getSortableDistanceKm(b));
   if (tab === 'popular') list.sort((a,b) => b.members - a.members);
   if (tab === 'favorite') list = list.filter(m => m.rating >= 4.8);
   filteredMosques = [...list];
@@ -1529,13 +1599,56 @@ function setTab(btn, tab) {
 }
 
 function locateMe() {
-  showNotif('Mencari masjid terdekat dari lokasi Anda...', 'success');
-  const sorted = [...MOSQUES].sort((a,b) => parseFloat(a.distance) - parseFloat(b.distance));
-  setTimeout(() => {
-    filteredMosques = [...sorted];
-    renderMosques(sorted);
-    updateMosqueMap(sorted);
-  }, 800);
+  if (!mosqueMap) initMosqueMap();
+
+  showNotif('Mengambil lokasi Anda dan mencari masjid terdekat...', 'success');
+
+  if (!navigator.geolocation) {
+    showNotif('Perangkat tidak mendukung geolokasi. Menampilkan urutan terdekat dari data default.', 'error');
+    const fallback = [...MOSQUES].sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+    filteredMosques = [...fallback];
+    currentTab = 'nearby';
+    renderMosques(fallback);
+    updateMosqueMap(fallback, { focusMosqueId: fallback[0]?.id, zoom: 13, openPopup: true });
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    position => {
+      const lat = Number(position?.coords?.latitude);
+      const lng = Number(position?.coords?.longitude);
+      if (!hasValidCoordinates(lat, lng)) {
+        showNotif('Lokasi tidak valid. Coba aktifkan GPS lalu ulangi.', 'error');
+        return;
+      }
+
+      userGeolocation = { lat, lng, accuracy: Number(position?.coords?.accuracy) || null };
+      const sorted = enrichMosquesWithUserDistance(lat, lng);
+      const nearest = sorted[0];
+
+      filteredMosques = [...sorted];
+      currentTab = 'nearby';
+      renderMosques(sorted);
+      updateMosqueMap(sorted, { focusMosqueId: nearest?.id, zoom: 15, openPopup: true });
+
+      if (nearest) {
+        showNotif(`Masjid terdekat: ${nearest.name} (${nearest.distance})`, 'success');
+      }
+    },
+    () => {
+      showNotif('Gagal mengakses lokasi. Menampilkan urutan terdekat dari data default.', 'error');
+      const fallback = [...MOSQUES].sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+      filteredMosques = [...fallback];
+      currentTab = 'nearby';
+      renderMosques(fallback);
+      updateMosqueMap(fallback, { focusMosqueId: fallback[0]?.id, zoom: 13, openPopup: true });
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 0,
+    }
+  );
 }
 
 function selectMosque(id) {
@@ -1571,7 +1684,16 @@ function initMosqueMap() {
   const mapEl = document.getElementById('mosque-map');
   if (!mapEl || mosqueMap) return;
 
-  mosqueMap = L.map('mosque-map', { zoomControl: true }).setView([-6.995, 110.425], 11);
+  mosqueMap = L.map('mosque-map', {
+    zoomControl: true,
+    scrollWheelZoom: false,
+    touchZoom: false,
+    dragging: false,
+    doubleClickZoom: false,
+    boxZoom: false,
+    keyboard: false,
+    tap: false,
+  }).setView([-6.995, 110.425], 11);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap contributors'
@@ -1583,10 +1705,16 @@ function initMosqueMap() {
   });
 }
 
-function updateMosqueMap(list) {
+function updateMosqueMap(list, options = {}) {
   if (!mosqueMap) return;
 
-  mosqueMarkers.forEach(marker => marker.remove());
+  const { focusMosqueId = null, zoom = 15, openPopup = false } = options;
+
+  mosqueMarkers.forEach(entry => {
+    if (entry?.marker?.remove) {
+      entry.marker.remove();
+    }
+  });
   mosqueMarkers = [];
 
   const points = [];
@@ -1603,16 +1731,23 @@ function updateMosqueMap(list) {
     });
     const marker = L.marker([lat, lng], { icon: markerIcon }).addTo(mosqueMap);
     marker.bindPopup(buildMosqueMapPopupHtml(m));
-    mosqueMarkers.push(marker);
+    mosqueMarkers.push({ id: Number(m.id), marker });
     points.push([lat, lng]);
   });
 
   if (points.length === 1) {
     mosqueMap.setView(points[0], 13);
+    if (focusMosqueId !== null && focusMosqueId !== undefined) {
+      focusMapOnMosque(focusMosqueId, { zoom, openPopup });
+    }
     return;
   }
   if (points.length > 1) {
     mosqueMap.fitBounds(points, { padding: [24, 24], maxZoom: 12 });
+  }
+
+  if (focusMosqueId !== null && focusMosqueId !== undefined) {
+    focusMapOnMosque(focusMosqueId, { zoom, openPopup });
   }
 }
 
@@ -1776,8 +1911,8 @@ function doLogin(type) {
   setTimeout(() => {
     hideLoading();
     const defaults = {
-      google: { name: 'Ahmad Fauzi', role: 'Pengguna Google', email: 'ahmad@example.com', phone: '081234567890' },
-      umum: { name: 'Budi Santoso', role: 'Jamaah Umum', email: '', phone: '081298765432' },
+      google: { name: 'Ahmad Nur', role: 'Pengguna Google', email: 'ahmad@example.com', phone: '081234567890' },
+      umum: { name: 'Ahmad Nur', role: 'Jamaah Umum', email: '', phone: '081298765432' },
       guest: { name: 'Tamu Jamaah', role: 'Guest', email: '', phone: '' },
     };
     const picked = defaults[type] || defaults.guest;

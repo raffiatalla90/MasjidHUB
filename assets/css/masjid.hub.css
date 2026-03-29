@@ -1,30 +1,31 @@
     :root {
-      --green-deep: #022c22;
-      --green-dark: #064e3b;
-      --green-mid: #065f46;
-      --green-main: #059669;
-      --green-light: #10b981;
-      --green-pale: #d1fae5;
-      --gold: #c9a84c;
-      --gold-light: #f0d080;
-      --gold-dark: #a07830;
-      --cream: #faf8f0;
-      --warm-white: #fffef9;
+      --green-deep: #123a42;
+      --green-dark: #1b4d57;
+      --green-mid: #23636f;
+      --green-main: #1b4d57;
+      --green-light: #2a7280;
+      --green-pale: #e6f0f2;
+      --gold: #e69138;
+      --gold-light: #f2b56f;
+      --gold-dark: #cc7d2a;
+      --cream: #f8f9fa;
+      --warm-white: #ffffff;
+      --charcoal: #333333;
     }
     * { box-sizing: border-box; }
     html, body { height: 100%; overflow: hidden; }
     body {
       font-family: 'Outfit', sans-serif;
       background: var(--cream);
-      color: #1a1a1a;
+      color: var(--charcoal);
     }
 
     /* ── Geometric Islamic Pattern ── */
     .geo-pattern {
       background-image:
-        repeating-linear-gradient(60deg, transparent 0px, transparent 28px, rgba(201,168,76,0.07) 28px, rgba(201,168,76,0.07) 30px),
-        repeating-linear-gradient(-60deg, transparent 0px, transparent 28px, rgba(201,168,76,0.07) 28px, rgba(201,168,76,0.07) 30px),
-        repeating-linear-gradient(0deg, transparent 0px, transparent 28px, rgba(201,168,76,0.04) 28px, rgba(201,168,76,0.04) 30px);
+        repeating-linear-gradient(60deg, transparent 0px, transparent 28px, rgba(230,145,56,0.10) 28px, rgba(230,145,56,0.10) 30px),
+        repeating-linear-gradient(-60deg, transparent 0px, transparent 28px, rgba(230,145,56,0.10) 28px, rgba(230,145,56,0.10) 30px),
+        repeating-linear-gradient(0deg, transparent 0px, transparent 28px, rgba(27,77,87,0.07) 28px, rgba(27,77,87,0.07) 30px);
     }
 
     /* ── Scrollbar ── */
@@ -67,6 +68,83 @@
       -webkit-background-clip: text; background-clip: text;
       -webkit-text-fill-color: transparent;
       animation: shimmer 3s linear infinite;
+    }
+
+    .brand-logo-splash {
+      width: min(72vw, 320px);
+      height: auto;
+      border-radius: 18px;
+      box-shadow: 0 20px 48px rgba(2, 44, 34, .28);
+    }
+    .brand-logo-header {
+      width: 44px;
+      height: 44px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 1px solid rgba(5,150,105,.16);
+      box-shadow: 0 6px 16px rgba(5, 150, 105, .2);
+      background: #ffffff;
+    }
+    .brand-logo-login {
+      width: min(70vw, 190px);
+      height: auto;
+      border-radius: 16px;
+      box-shadow: 0 16px 34px rgba(2, 44, 34, .28);
+    }
+    .brand-logo-mobile {
+      width: 36px;
+      height: 36px;
+      object-fit: cover;
+      border-radius: 10px;
+      background: #ffffff;
+      border: 1px solid rgba(255,255,255,.22);
+    }
+
+    @media (max-width: 640px) {
+      .brand-logo-splash {
+        width: min(84vw, 260px);
+      }
+      .brand-logo-login {
+        width: min(82vw, 164px);
+      }
+    }
+
+    /* ── Tailwind Palette Bridge ── */
+    .bg-emerald-900 { background-color: var(--green-deep) !important; }
+    .bg-emerald-800 { background-color: var(--green-dark) !important; }
+    .bg-emerald-700 { background-color: var(--green-mid) !important; }
+    .bg-emerald-600 { background-color: var(--green-main) !important; }
+    .bg-emerald-500 { background-color: var(--green-light) !important; }
+    .bg-emerald-100 { background-color: var(--green-pale) !important; }
+    .bg-emerald-50 { background-color: #f2f7f8 !important; }
+
+    .text-emerald-100 { color: #e8f1f3 !important; }
+    .text-emerald-200 { color: #c9dde2 !important; }
+    .text-emerald-300 { color: #a9c9d1 !important; }
+    .text-emerald-400 { color: #5d96a2 !important; }
+    .text-emerald-500 { color: var(--green-light) !important; }
+    .text-emerald-600 { color: var(--green-main) !important; }
+    .text-emerald-700 { color: #17454d !important; }
+    .text-emerald-800 { color: #123a42 !important; }
+    .text-emerald-900 { color: #0f3037 !important; }
+
+    .border-emerald-50 { border-color: #eaf1f3 !important; }
+    .border-emerald-100 { border-color: #d9e8eb !important; }
+    .border-emerald-200 { border-color: #c1d9de !important; }
+    .border-emerald-300 { border-color: #9dc0c8 !important; }
+    .border-emerald-400 { border-color: #5d96a2 !important; }
+
+    .from-emerald-900 {
+      --tw-gradient-from: var(--green-deep) var(--tw-gradient-from-position) !important;
+      --tw-gradient-to: rgb(18 58 66 / 0) var(--tw-gradient-to-position) !important;
+      --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+    }
+    .via-emerald-800 {
+      --tw-gradient-to: rgb(27 77 87 / 0) var(--tw-gradient-to-position) !important;
+      --tw-gradient-stops: var(--tw-gradient-from), var(--green-dark) var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+    }
+    .to-emerald-900 {
+      --tw-gradient-to: var(--green-deep) var(--tw-gradient-to-position) !important;
     }
 
     /* ── Cards ── */
@@ -669,6 +747,11 @@
     
     /* ── Mosque selector ── */
     #mosque-screen { background:var(--cream); overflow-y:auto; }
+    .mosque-selector-header {
+      z-index: 1400 !important;
+      position: sticky;
+      top: 0;
+    }
     .selector-tabs {
       overflow-x:auto;
       -webkit-overflow-scrolling:touch;
@@ -697,10 +780,40 @@
       overflow:hidden;
       box-shadow:0 8px 24px rgba(0,0,0,.08);
       border:1px solid #ecfdf5;
+      position: relative;
+      z-index: 1;
     }
     #mosque-map {
+      position: relative;
       height:260px;
       width:100%;
+      touch-action: pan-y;
+      z-index: 1;
+    }
+    #mosque-map .leaflet-container {
+      touch-action: pan-y !important;
+      z-index: 1;
+    }
+    #mosque-map .leaflet-pane,
+    #mosque-map .leaflet-top,
+    #mosque-map .leaflet-bottom,
+    #mosque-map .leaflet-control {
+      z-index: 10 !important;
+    }
+    #mosque-map::after {
+      content: 'Gunakan tombol + / - untuk zoom peta';
+      position: absolute;
+      right: 10px;
+      bottom: 8px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #4b5563;
+      background: rgba(255,255,255,.85);
+      border: 1px solid #d1d5db;
+      border-radius: 999px;
+      padding: 4px 8px;
+      pointer-events: none;
+      z-index: 11;
     }
     @media (max-width: 640px) {
       #mosque-map { height:240px; }
