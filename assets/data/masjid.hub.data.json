@@ -1,0 +1,266 @@
+{
+  "mosques": [
+    {
+      "id": 1,
+      "name": "Masjid Nurul Huda UNS",
+      "address": "Jalan Ir. Sutami 36A Kentingan, Jebres, Surakarta, Jawa Tengah. Indonesia 57126.",
+      "city": "Surakarta, Jawa Tengah",
+      "icon": "🕌",
+      "color": "emerald",
+      "package": "premium",
+      "members": 1240,
+      "distance": "0.3 km",
+      "rating": 4.9,
+      "verified": true,
+      "lat": -7.5576,
+      "lng": 110.8568,
+      "image": "NurulHudaUNS.jpeg",
+      "description": "Masjid Nurul Huda UNS di kawasan Kentingan yang aktif menyelenggarakan kajian rutin, pembinaan jamaah, dan program kemahasiswaan.",
+      "tags": ["Kajian Rutin", "UMKM", "Tahfidz"],
+      "balance": 125450000,
+      "income": 45200000,
+      "expense": 18500000
+    },
+    {
+      "id": 2,
+      "name": "Masjid Al-Ikhlas",
+      "address": "Jl. Ngesrep Timur V No. 33, Banyumanik",
+      "city": "Semarang, Jawa Tengah",
+      "icon": "🏛️",
+      "color": "blue",
+      "package": "standard",
+      "members": 860,
+      "distance": "1.2 km",
+      "rating": 4.7,
+      "verified": true,
+      "lat": -7.0521,
+      "lng": 110.4224,
+      "image": "https://placehold.co/1200x675/0c4a6e/ffffff?text=Masjid+Al-Ikhlas",
+      "description": "Masjid lingkungan yang fokus pada pendidikan TPA, layanan koperasi jamaah, dan penguatan program wakaf.",
+      "tags": ["TPA", "Koperasi", "Wakaf"],
+      "balance": 98200000,
+      "income": 32100000,
+      "expense": 14800000
+    },
+    {
+      "id": 3,
+      "name": "Masjid Baiturrahman",
+      "address": "Jl. Pandanaran No. 126, Simpang Lima",
+      "city": "Semarang, Jawa Tengah",
+      "icon": "⛪",
+      "color": "purple",
+      "package": "premium",
+      "members": 2100,
+      "distance": "3.5 km",
+      "rating": 4.8,
+      "verified": true,
+      "lat": -6.9904,
+      "lng": 110.4202,
+      "image": "https://placehold.co/1200x675/4c1d95/ffffff?text=Masjid+Baiturrahman",
+      "description": "Masjid bersejarah di pusat kota dengan aktivitas kajian besar, edukasi sejarah Islam, dan wisata religi.",
+      "tags": ["Terbesar", "Museum", "Wisata"],
+      "balance": 312000000,
+      "income": 89000000,
+      "expense": 41000000
+    },
+    {
+      "id": 4,
+      "name": "Masjid Agung Jawa Tengah",
+      "address": "Jl. Gajah Raya, Sambirejo",
+      "city": "Semarang, Jawa Tengah",
+      "icon": "🕍",
+      "color": "gold",
+      "package": "premium",
+      "members": 5400,
+      "distance": "4.1 km",
+      "rating": 4.9,
+      "verified": true,
+      "lat": -6.9831,
+      "lng": 110.4458,
+      "image": "https://placehold.co/1200x675/92400e/ffffff?text=Masjid+Agung+Jateng",
+      "description": "Kompleks masjid skala besar dengan agenda dakwah harian, pusat edukasi, serta destinasi wisata religi nasional.",
+      "tags": ["Wisata", "Museum", "Kajian"],
+      "balance": 890000000,
+      "income": 245000000,
+      "expense": 112000000
+    },
+    {
+      "id": 5,
+      "name": "Masjid Al-Aqsha Menara Kudus",
+      "address": "Jl. Kauman No. 1, Kota Kudus",
+      "city": "Kudus, Jawa Tengah",
+      "icon": "🏯",
+      "color": "amber",
+      "package": "standard",
+      "members": 3200,
+      "distance": "56.4 km",
+      "rating": 4.8,
+      "verified": false,
+      "lat": -6.8048,
+      "lng": 110.8405,
+      "image": "https://placehold.co/1200x675/7c2d12/ffffff?text=Masjid+Al-Aqsha+Kudus",
+      "description": "Masjid cagar budaya dengan nilai sejarah kuat, menjadi pusat pembinaan jamaah dan kegiatan keislaman masyarakat.",
+      "tags": ["Bersejarah", "Walisongo"],
+      "balance": 445000000,
+      "income": 120000000,
+      "expense": 58000000
+    },
+    {
+      "id": 6,
+      "name": "Masjid Istiqlal Jakarta",
+      "address": "Jl. Taman Wijaya Kusuma No. 1",
+      "city": "Jakarta Pusat, DKI Jakarta",
+      "icon": "🏰",
+      "color": "teal",
+      "package": "premium",
+      "members": 28000,
+      "distance": "447 km",
+      "rating": 5,
+      "verified": true,
+      "lat": -6.1702,
+      "lng": 106.8314,
+      "image": "https://placehold.co/1200x675/134e4a/ffffff?text=Masjid+Istiqlal",
+      "description": "Masjid nasional dengan skala jamaah sangat besar, program dakwah lintas daerah, dan manajemen kegiatan terintegrasi.",
+      "tags": ["Terbesar", "Nasional", "Wisata"],
+      "balance": 12000000000,
+      "income": 3400000000,
+      "expense": 1200000000
+    }
+  ],
+  "transactions": [
+    { "type": "in", "label": "Infaq Jumat", "amount": 15200000, "date": "Jumat, 26 Mar", "category": "Infaq", "icon": "💚" },
+    { "type": "in", "label": "Donasi Online - Ahmad F", "amount": 500000, "date": "Kamis, 25 Mar", "category": "Donasi", "icon": "💳" },
+    { "type": "out", "label": "Listrik & Air", "amount": 2400000, "date": "Rabu, 24 Mar", "category": "Operasional", "icon": "⚡" },
+    { "type": "out", "label": "Honor Ustadz Kajian", "amount": 1500000, "date": "Selasa, 23 Mar", "category": "Program", "icon": "📚" },
+    { "type": "in", "label": "Zakat Maal - Budi S", "amount": 2500000, "date": "Senin, 22 Mar", "category": "Zakat", "icon": "💰" }
+  ],
+  "events": [
+    { "title": "Kajian Tafsir Al-Quran", "ustadz": "Ust. Ahmad Zaki, Lc.", "time": "Setiap Kamis, 18:30", "type": "kajian", "icon": "📖", "registered": false, "quota": 50, "filled": 38 },
+    { "title": "Sholat Subuh Berjamaah", "ustadz": "Imam Masjid", "time": "Setiap Hari, 04:30", "type": "sholat", "icon": "🌅", "registered": true, "quota": 200, "filled": 120 },
+    { "title": "Bakti Sosial Jumat Berkah", "ustadz": "Panitia Masjid", "time": "Setiap Jumat, 11:00", "type": "sosial", "icon": "🤝", "registered": false, "quota": 30, "filled": 12 },
+    { "title": "Workshop Digital Marketing", "ustadz": "Tim Kreatif Masjid", "time": "Sabtu, 09:00", "type": "workshop", "icon": "💻", "registered": false, "quota": 40, "filled": 35 },
+    { "title": "Tahsin Al-Quran", "ustadz": "Ust. Fatimah Az-Zahra", "time": "Selasa & Kamis, 16:00", "type": "tahsin", "icon": "🎵", "registered": true, "quota": 25, "filled": 20 },
+    { "title": "Pengajian Akbar Ramadhan", "ustadz": "Prof. Dr. M. Yunus", "time": "Jumat, 22 Mar, 19:00", "type": "akbar", "icon": "⭐", "registered": false, "quota": 500, "filled": 289 }
+  ],
+  "vouchers": [
+    { "name": "Nasi Kotak Jumat", "emoji": "🍱", "desc": "Makan siang gratis tiap Jumat setelah sholat Jumat", "valid": "Jumat ini", "left": 30 },
+    { "name": "Sahur Ramadhan", "emoji": "🌙", "desc": "Sahur gratis selama bulan Ramadhan", "valid": "30 Maret - 28 April", "left": 45 },
+    { "name": "Susu & Roti Subuh", "emoji": "🥛", "desc": "Sarapan sederhana setelah sholat Subuh berjamaah", "valid": "Setiap Hari", "left": 15 },
+    { "name": "Iftar Ramadhan", "emoji": "🌙", "desc": "Buka puasa berjamaah dengan makanan bergizi", "valid": "Ramadhan 1446H", "left": 200 }
+  ],
+  "products": [
+    { "name": "Kurma Ajwa Premium", "price": 85000, "emoji": "🌴", "cat": "makanan", "seller": "Toko Barakah", "sold": 124 },
+    { "name": "Hijab Segi Empat Voal", "price": 65000, "emoji": "🧣", "cat": "fashion", "seller": "Butik Muslimah", "sold": 89 },
+    { "name": "Buku Fiqih Muamalah", "price": 75000, "emoji": "📚", "cat": "buku", "seller": "Maktabah Salaf", "sold": 45 },
+    { "name": "Minyak Zaitun Extra Virgin", "price": 120000, "emoji": "🫒", "cat": "makanan", "seller": "Toko Sunnah", "sold": 67 },
+    { "name": "E-Book Belajar Tajwid", "price": 25000, "emoji": "📱", "cat": "digital", "seller": "Quran Digital", "sold": 203 },
+    { "name": "Gamis Pria Katun Linen", "price": 195000, "emoji": "👕", "cat": "fashion", "seller": "Butik Tazkiyah", "sold": 38 },
+    { "name": "Sari Kurma Original", "price": 45000, "emoji": "🍯", "cat": "makanan", "seller": "Toko Barakah", "sold": 156 },
+    { "name": "Template PPT Islami", "price": 15000, "emoji": "🖥️", "cat": "digital", "seller": "Creative Muslim", "sold": 91 }
+  ],
+  "volunteers": [
+    { "role": "Pengelola Infaq Jumat", "emoji": "💚", "desc": "Bantu mengelola dan mendistribusikan infaq setiap Jumat", "skills": ["Teliti", "Amanah"], "open": 5, "applied": 3 },
+    { "role": "Pengajar TPA", "emoji": "📖", "desc": "Mengajar Al-Quran untuk anak-anak usia 6-12 tahun", "skills": ["Hafidz/Hafidzah", "Sabar"], "open": 3, "applied": 7 },
+    { "role": "Tim Dokumentasi", "emoji": "📸", "desc": "Merekam dan mendokumentasikan kegiatan masjid", "skills": ["Fotografi", "Editing"], "open": 2, "applied": 1 },
+    { "role": "Admin Media Sosial", "emoji": "📱", "desc": "Mengelola konten media sosial masjid", "skills": ["Kreatif", "Desain"], "open": 1, "applied": 4 }
+  ],
+  "rooms": [
+    { "name": "Aula Utama", "capacity": 200, "emoji": "🏛️", "booked": false, "price": 0, "desc": "Untuk acara besar, nikahan, seminar", "features": ["AC", "Sound System", "Proyektor"] },
+    { "name": "Ruang Kajian A", "capacity": 50, "emoji": "🪑", "booked": false, "price": 0, "desc": "Kajian kecil, diskusi kelompok", "features": ["AC", "Whiteboard"] },
+    { "name": "Ruang Kajian B", "capacity": 30, "emoji": "🪑", "booked": true, "price": 0, "desc": "Kajian privat, bimbingan", "features": ["AC", "TV"] },
+    { "name": "Perpustakaan", "capacity": 20, "emoji": "📚", "booked": false, "price": 0, "desc": "Belajar, baca buku, riset", "features": ["AC", "WiFi"] },
+    { "name": "Dapur Umum", "capacity": 10, "emoji": "🍳", "booked": false, "price": 0, "desc": "Masak untuk kegiatan sosial", "features": ["Kompor", "Peralatan"] },
+    { "name": "Taman Masjid", "capacity": 100, "emoji": "🌿", "booked": false, "price": 0, "desc": "Outdoor, piknik, bazaar", "features": ["Outdoor", "Luas"] }
+  ],
+  "prayers": [
+    { "name": "Subuh", "time": "04:28", "icon": "🌅", "iqamah": "04:43" },
+    { "name": "Dzuhur", "time": "11:55", "icon": "☀️", "iqamah": "12:10" },
+    { "name": "Ashar", "time": "15:17", "icon": "🌤️", "iqamah": "15:30" },
+    { "name": "Maghrib", "time": "18:01", "icon": "🌇", "iqamah": "18:06" },
+    { "name": "Isya", "time": "19:15", "icon": "🌙", "iqamah": "19:25" }
+  ],
+  "badges": [
+    { "name": "Jamaah Perdana", "emoji": "⭐", "desc": "Hadir pertama kali", "unlocked": true },
+    { "name": "Seminggu Setia", "emoji": "🔥", "desc": "7 hari berturut-turut", "unlocked": true },
+    { "name": "Donatur Sejati", "emoji": "💎", "desc": "Donasi 10x", "unlocked": true },
+    { "name": "Penggerak Masjid", "emoji": "🏆", "desc": "Ikut 5 kegiatan", "unlocked": false },
+    { "name": "Hafidz Digital", "emoji": "📖", "desc": "Baca Al-Quran 30 hari", "unlocked": false },
+    { "name": "Wakif Mulia", "emoji": "🌟", "desc": "Tunaikan wakaf", "unlocked": false }
+  ],
+  "streak": {
+    "current": 12,
+    "longest": 28,
+    "total": 156
+  },
+  "defaultTakmirAdmin": {
+    "mosqueId": 1,
+    "mosqueName": "Masjid Nurul Huda UNS",
+    "city": "Surakarta, Jawa Tengah",
+    "address": "Jalan Ir. Sutami 36A Kentingan, Jebres, Surakarta, Jawa Tengah. Indonesia 57126.",
+    "adminName": "Ust Raffi Atalla",
+    "email": "takmir.premium@masjidhub.id",
+    "phone": "081390001122",
+    "password": "Takmir123!",
+    "package": "premium",
+    "paid": true,
+    "lat": -7.5576,
+    "lng": 110.8568,
+    "financeRecords": [
+      {
+        "amount": 15000000,
+        "note": "Infaq Jumat Pekan Ini",
+        "date": "28/03/2026",
+        "type": "income",
+        "time": "12.30"
+      },
+      {
+        "amount": 3250000,
+        "note": "Operasional Harian Masjid",
+        "date": "27/03/2026",
+        "type": "expense",
+        "time": "09.15"
+      }
+    ],
+    "customEvents": [
+      {
+        "title": "Kajian Akbar Bulanan",
+        "time": "Ahad, 07:00",
+        "type": "Kajian"
+      },
+      {
+        "title": "Tur Edukasi Sejarah Masjid",
+        "time": "Sabtu, 14:00",
+        "type": "Wisata"
+      }
+    ]
+  },
+  "mosqueEventCatalog": {
+    "1": [
+      { "title": "Kajian Tafsir Rutin", "time": "Kamis, 18:30", "type": "Kajian" },
+      { "title": "Kelas Tahfidz Anak", "time": "Sabtu, 08:00", "type": "Pendidikan" },
+      { "title": "Bakti Sosial Jumat", "time": "Jumat, 10:30", "type": "Sosial" }
+    ],
+    "2": [
+      { "title": "Kajian Fiqih Keluarga", "time": "Rabu, 19:00", "type": "Kajian" },
+      { "title": "Pelatihan Pengurus TPA", "time": "Minggu, 09:00", "type": "Pendidikan" }
+    ],
+    "3": [
+      { "title": "Kajian Akbar Bulanan", "time": "Ahad, 07:00", "type": "Kajian" },
+      { "title": "Tur Edukasi Sejarah Masjid", "time": "Sabtu, 14:00", "type": "Wisata" }
+    ],
+    "4": [
+      { "title": "Tabligh Akbar Nasional", "time": "Jumat, 19:30", "type": "Kajian" },
+      { "title": "Festival Ekonomi Syariah", "time": "Sabtu, 09:00", "type": "Event" },
+      { "title": "Kelas Tahsin Dewasa", "time": "Senin, 16:30", "type": "Pendidikan" }
+    ],
+    "5": [
+      { "title": "Kajian Sejarah Islam Nusantara", "time": "Ahad, 08:00", "type": "Kajian" },
+      { "title": "Ziarah Edukasi Walisongo", "time": "Sabtu, 15:00", "type": "Wisata" }
+    ],
+    "6": [
+      { "title": "Kajian Internasional", "time": "Sabtu, 19:00", "type": "Kajian" },
+      { "title": "Konferensi Pemuda Masjid", "time": "Minggu, 09:00", "type": "Event" },
+      { "title": "Pelatihan Manajemen Takmir", "time": "Selasa, 13:30", "type": "Pelatihan" }
+    ]
+  }
+}

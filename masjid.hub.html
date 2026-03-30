@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#064e3b">
+  <meta name="description" content="MasjidHub - Platform Digital Terpadu Ekosistem Masjid Indonesia">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MasjidHub">
+  <title>MasjidHub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/masjid.hub.css">
+</head>
+<body>
+
+<!-- Layout Partials: Halaman Awal + Portal Login -->
+<div id="partial-initial"></div>
+<div id="partial-login-portal"></div>
+
+<!-- ═══════════════════════════════════════════
+     TAKMIR REGISTRATION SCREEN
+═══════════════════════════════════════════ -->
+<div id="takmir-screen" class="screen hidden overflow-y-auto">
+  <div class="min-h-full bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-800 p-6">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center justify-between mb-6">
+        <button onclick="backToRole()" class="text-emerald-100 hover:text-white text-sm" style="border:none;background:none;cursor:pointer;font-family:'Outfit',sans-serif;">
+          <i class="fas fa-arrow-left mr-1"></i>Kembali ke Portal
+        </button>
+        <span class="text-xs text-emerald-200">Registrasi Takmir</span>
+      </div>
+
+      <div class="takmir-grid">
+        <div class="card p-5">
+          <h3 class="font-bold text-gray-800 mb-3">Data Masjid</h3>
+          <div class="space-y-3">
+            <input id="reg-mosque-name" class="input-field" placeholder="Nama Masjid">
+            <input id="reg-mosque-city" class="input-field" placeholder="Kota / Kabupaten">
+            <textarea id="reg-mosque-address" class="input-field" placeholder="Alamat lengkap" rows="3"></textarea>
+            <div class="takmir-location-box">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
+                <div>
+                  <p class="font-semibold text-slate-800 text-sm"><i class="fas fa-location-crosshairs mr-1 text-emerald-600"></i>Lokasi Device Masjid</p>
+                  <p id="reg-location-status" class="text-xs text-slate-500 mt-0.5">Lokasi perangkat belum diambil.</p>
+                </div>
+                <button id="reg-location-btn" type="button" onclick="requestTakmirDeviceLocation()" class="btn-outline px-3 py-2 text-xs">Ambil Lokasi Device</button>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-2">Koordinat: <span id="reg-location-coords" class="font-semibold text-slate-700">-</span></p>
+            </div>
+            <input id="reg-admin-name" class="input-field" placeholder="Nama Takmir / Penanggung Jawab">
+            <input id="reg-admin-email" class="input-field" type="email" placeholder="Email Gmail Takmir">
+            <input id="reg-admin-phone" class="input-field" placeholder="Nomor WhatsApp">
+            <input id="reg-admin-password" class="input-field" type="password" placeholder="Password akun takmir">
+          </div>
+        </div>
+
+        <div class="card p-5">
+          <h3 class="font-bold text-gray-800 mb-3">Pilih Paket Langganan</h3>
+          <div class="space-y-2">
+            <button class="takmir-package-card active" data-takmir-package="basic" onclick="setTakmirPackage('basic')">
+              <div><p class="font-bold text-gray-800">Basic</p><p class="text-xs text-gray-500">Mulai digitalisasi informasi masjid</p></div>
+              <span class="text-sm font-bold text-emerald-600">Rp29.000</span>
+            </button>
+            <button class="takmir-package-card" data-takmir-package="standard" onclick="setTakmirPackage('standard')">
+              <div><p class="font-bold text-gray-800">Standard</p><p class="text-xs text-gray-500">Aktivasi interaksi dan kegiatan jamaah</p></div>
+              <span class="text-sm font-bold text-sky-600">Rp59.000</span>
+            </button>
+            <button class="takmir-package-card" data-takmir-package="premium" onclick="setTakmirPackage('premium')">
+              <div><p class="font-bold text-gray-800">Premium</p><p class="text-xs text-gray-500">Sistem masjid lengkap dan transparan</p></div>
+              <span class="text-sm font-bold text-purple-600">Rp99.000</span>
+            </button>
+          </div>
+          <p id="takmir-package-summary" class="text-xs text-gray-500 mt-3">Paket Basic dipilih.</p>
+          <button onclick="submitTakmirRegistration()" class="btn-primary w-full py-3 mt-4">Daftarkan Masjid & Aktifkan Dashboard</button>
+
+          <div id="takmir-payment-panel" class="hidden mt-4 border border-emerald-200 rounded-2xl p-4 bg-emerald-50">
+            <div class="flex items-center justify-between mb-2">
+              <p class="font-bold text-emerald-800 text-sm">Status Paket Bulanan</p>
+              <span id="takmir-payment-status" class="badge badge-green">Lunas</span>
+            </div>
+            <p class="text-xs text-emerald-700 mb-3">Paket aktif: <span id="takmir-bill-amount" class="font-bold"></span></p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button id="go-admin-btn" onclick="openAdminDashboard()" class="btn-outline w-full py-2.5 text-sm">Masuk Dashboard Admin</button>
+              <button id="upgrade-package-btn" onclick="upgradeTakmirPackage()" class="btn-primary w-full py-2.5 text-sm">Upgrade Paket</button>
+            </div>
+          </div>
+
+          <div class="mt-4 border border-slate-200 rounded-2xl p-4 bg-slate-50">
+            <p class="font-bold text-slate-700 text-sm mb-2">Sudah Terdaftar? Login Admin Takmir</p>
+            <div id="takmir-default-login-box" class="takmir-default-login-box mb-3">
+              <div class="takmir-default-login-head">
+                <p class="takmir-default-login-title"><i class="fas fa-key text-amber-500 mr-1"></i>Akun Admin Default Deploy</p>
+                <span class="takmir-default-login-badge">Siap Pakai</span>
+              </div>
+              <p class="text-xs text-slate-500 mb-2">Gunakan akun bawaan deploy ini jika belum membuat akun takmir baru.</p>
+              <div class="takmir-default-login-list">
+                <div class="takmir-default-login-item">
+                  <span class="takmir-default-login-label">Masjid</span>
+                  <strong id="default-admin-mosque">Masjid Baiturrahman</strong>
+                </div>
+                <div class="takmir-default-login-item">
+                  <span class="takmir-default-login-label">Email</span>
+                  <strong id="default-admin-email">takmir.premium@masjidhub.id</strong>
+                </div>
+                <div class="takmir-default-login-item">
+                  <span class="takmir-default-login-label">Password</span>
+                  <strong id="default-admin-password">Takmir123!</strong>
+                </div>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <input id="takmir-login-email" class="input-field" type="email" placeholder="Email Gmail takmir">
+              <input id="takmir-login-password" class="input-field" type="password" placeholder="Password akun takmir">
+              <button onclick="loginTakmirAdmin()" class="btn-outline w-full py-2.5 text-sm">Login sebagai Admin</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     ADMIN SCREEN
+═══════════════════════════════════════════ -->
+<div id="admin-screen" class="screen hidden overflow-y-auto">
+  <div class="min-h-full bg-slate-50 p-5 md:p-8">
+    <div class="max-w-6xl mx-auto space-y-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-black text-slate-800">Admin Masjid</h2>
+          <p class="text-sm text-slate-500">Kelola masjid sesuai paket yang dibeli</p>
+        </div>
+        <button onclick="backToRole()" class="btn-outline px-4 py-2 text-sm">Keluar</button>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-3">
+        <div class="card p-4"><p class="text-xs text-gray-500">Nama Masjid</p><p id="admin-mosque-name" class="font-bold text-gray-800"></p></div>
+        <div class="card p-4"><p class="text-xs text-gray-500">Kota</p><p id="admin-mosque-city" class="font-bold text-gray-800"></p></div>
+        <div class="card p-4"><p class="text-xs text-gray-500">Paket Aktif</p><p id="admin-package-name" class="font-bold text-emerald-700"></p></div>
+      </div>
+
+      <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
+        <div class="admin-feature-card card p-4" data-required-package="basic">
+          <p class="font-bold text-gray-800">Profil Masjid & Pengumuman</p>
+          <p class="text-xs text-gray-500 mt-1">Kelola halaman masjid, jadwal sholat, dan info jamaah.</p>
+          <p data-status class="admin-feature-status mt-3">Aktif</p>
+        </div>
+        <div class="admin-feature-card card p-4" data-required-package="standard">
+          <p class="font-bold text-gray-800">Kajian, Event, Form Kegiatan</p>
+          <p class="text-xs text-gray-500 mt-1">Buat acara, galeri, dan pendaftaran peserta.</p>
+          <p data-status class="admin-feature-status mt-3">Aktif</p>
+        </div>
+        <div class="admin-feature-card card p-4" data-required-package="premium">
+          <p class="font-bold text-gray-800">Keuangan, Donasi, Laporan</p>
+          <p class="text-xs text-gray-500 mt-1">Catatan pemasukan/pengeluaran dengan transparansi penuh.</p>
+          <p data-status class="admin-feature-status mt-3">Aktif</p>
+        </div>
+        <div class="admin-feature-card card p-4" data-required-package="premium">
+          <p class="font-bold text-gray-800">Notifikasi WA/Email</p>
+          <p class="text-xs text-gray-500 mt-1">Kirim update otomatis ke jamaah.</p>
+          <p data-status class="admin-feature-status mt-3">Aktif</p>
+        </div>
+        <div class="admin-feature-card card p-4" data-required-package="premium">
+          <p class="font-bold text-gray-800">Booking Ruangan</p>
+          <p class="text-xs text-gray-500 mt-1">Atur reservasi aula dan ruang kegiatan.</p>
+          <p data-status class="admin-feature-status mt-3">Aktif</p>
+        </div>
+        <div class="admin-feature-card card p-4" data-required-package="premium">
+          <p class="font-bold text-gray-800">Add-on Premium</p>
+          <p class="text-xs text-gray-500 mt-1">UMKM Masjid, Relawan, dan Streak Ibadah.</p>
+          <p data-status class="admin-feature-status mt-3">Aktif</p>
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-4">
+        <div class="card p-5">
+          <h3 class="font-bold text-gray-800 mb-3">Edit Profil Masjid</h3>
+          <div class="space-y-2">
+            <input id="admin-edit-name" class="input-field" placeholder="Nama Masjid">
+            <input id="admin-edit-city" class="input-field" placeholder="Kota">
+            <textarea id="admin-edit-address" class="input-field" rows="3" placeholder="Alamat masjid"></textarea>
+            <textarea id="admin-edit-description" class="input-field" rows="3" placeholder="Deskripsi masjid"></textarea>
+            <button onclick="saveAdminMosqueProfile()" class="btn-primary w-full py-2.5 text-sm">Simpan Perubahan Profil</button>
+          </div>
+        </div>
+
+        <div class="card p-5">
+          <h3 class="font-bold text-gray-800 mb-3">Kelola Pemasukan Keuangan</h3>
+          <div class="space-y-2">
+            <input id="admin-income-amount" type="number" class="input-field" placeholder="Nominal pemasukan (Rp)">
+            <input id="admin-income-note" class="input-field" placeholder="Sumber pemasukan, mis: Infaq Jumat">
+            <button onclick="addAdminIncome()" class="btn-primary w-full py-2.5 text-sm">Tambah Pemasukan</button>
+          </div>
+          <div id="admin-income-history" class="mt-3 space-y-2"></div>
+        </div>
+
+        <div class="card p-5">
+          <p class="text-[11px] uppercase tracking-widest text-emerald-600 font-bold mb-1">Tab Admin</p>
+          <h3 class="font-bold text-gray-800 mb-3">Kelola Event Kajian</h3>
+          <div class="space-y-2">
+            <input id="admin-event-title" class="input-field" placeholder="Judul event, mis: Kajian Tafsir Jumat">
+            <input id="admin-event-time" class="input-field" placeholder="Waktu, mis: Jumat, 19:30">
+            <input id="admin-event-type" class="input-field" placeholder="Kategori, mis: Kajian / Sosial / Pelatihan">
+            <button onclick="addAdminEvent()" class="btn-primary w-full py-2.5 text-sm">Tambah Event</button>
+          </div>
+          <div id="admin-event-list" class="mt-3 space-y-2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Layout Partial: Dashboard / App -->
+<div id="partial-dashboard-app"></div>
+
+
+<!-- ═══════════════════════════════════════════
+     MODALS
+═══════════════════════════════════════════ -->
+
+<!-- Partial: Profil Jamaah Modal -->
+<div id="partial-jamaah-profile"></div>
+
+<!-- Donation Modal -->
+<div id="donation-modal" class="modal-bg hidden">
+  <div class="modal-box">
+    <div class="p-5 border-b border-gray-100 flex items-center gap-3">
+      <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-xl" id="modal-donate-icon">💰</div>
+      <div><h3 class="font-bold text-gray-800" id="modal-donate-title">Donasi</h3><p class="text-xs text-gray-500" id="modal-donate-mosque"></p></div>
+      <button onclick="closeDonationModal()" class="ml-auto text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100" style="border:none;cursor:pointer;background:none;font-size:1rem;"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="p-5 space-y-4">
+      <div>
+        <label class="text-sm font-semibold text-gray-700 block mb-2">Nominal Donasi</label>
+        <div class="grid grid-cols-3 gap-2 mb-3">
+          <button onclick="setAmount(50000)" class="border-2 border-emerald-200 rounded-xl py-2 text-sm font-semibold hover:border-emerald-500 hover:bg-emerald-50 transition" style="cursor:pointer;background:none;font-family:'Outfit',sans-serif;">Rp 50rb</button>
+          <button onclick="setAmount(100000)" class="border-2 border-emerald-200 rounded-xl py-2 text-sm font-semibold hover:border-emerald-500 hover:bg-emerald-50 transition" style="cursor:pointer;background:none;font-family:'Outfit',sans-serif;">Rp 100rb</button>
+          <button onclick="setAmount(250000)" class="border-2 border-emerald-200 rounded-xl py-2 text-sm font-semibold hover:border-emerald-500 hover:bg-emerald-50 transition" style="cursor:pointer;background:none;font-family:'Outfit',sans-serif;">Rp 250rb</button>
+          <button onclick="setAmount(500000)" class="border-2 border-emerald-200 rounded-xl py-2 text-sm font-semibold hover:border-emerald-500 hover:bg-emerald-50 transition" style="cursor:pointer;background:none;font-family:'Outfit',sans-serif;">Rp 500rb</button>
+          <button onclick="setAmount(1000000)" class="border-2 border-emerald-200 rounded-xl py-2 text-sm font-semibold hover:border-emerald-500 hover:bg-emerald-50 transition" style="cursor:pointer;background:none;font-family:'Outfit',sans-serif;">Rp 1jt</button>
+          <button onclick="setAmount(0)" class="border-2 border-emerald-200 rounded-xl py-2 text-sm font-semibold hover:border-emerald-500 hover:bg-emerald-50 transition" style="cursor:pointer;background:none;font-family:'Outfit',sans-serif;">Lainnya</button>
+        </div>
+        <input type="number" id="donate-amount" class="input-field" placeholder="Rp 0" min="1000">
+      </div>
+      <div>
+        <label class="text-sm font-semibold text-gray-700 block mb-2">Pesan (opsional)</label>
+        <textarea class="input-field resize-none" rows="2" placeholder="Doa atau pesan untuk pengelola..."></textarea>
+      </div>
+      <div>
+        <label class="text-sm font-semibold text-gray-700 block mb-2">Metode Pembayaran</label>
+        <div class="grid grid-cols-3 gap-2">
+          <label class="border-2 border-gray-200 rounded-xl p-2 text-center text-xs font-semibold cursor-pointer hover:border-emerald-500 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50">
+            <input type="radio" name="payment" value="transfer" class="sr-only" checked>💳 Transfer
+          </label>
+          <label class="border-2 border-gray-200 rounded-xl p-2 text-center text-xs font-semibold cursor-pointer hover:border-emerald-500 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50">
+            <input type="radio" name="payment" value="qris" class="sr-only">📱 QRIS
+          </label>
+          <label class="border-2 border-gray-200 rounded-xl p-2 text-center text-xs font-semibold cursor-pointer hover:border-emerald-500 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50">
+            <input type="radio" name="payment" value="ewallet" class="sr-only">💚 e-Wallet
+          </label>
+        </div>
+      </div>
+      <button onclick="submitDonation()" class="btn-primary w-full py-3 text-base">
+        <i class="fas fa-heart mr-2"></i>Donasikan Sekarang
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Check-in Modal -->
+<div id="checkin-modal" class="modal-bg hidden">
+  <div class="modal-box">
+    <div class="p-5 border-b border-gray-100 flex items-center gap-3">
+      <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-xl">📱</div>
+      <div><h3 class="font-bold text-gray-800">Check-in Kegiatan</h3><p class="text-xs text-gray-500" id="checkin-mosque-name"></p></div>
+      <button onclick="closeCheckInModal()" class="ml-auto text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100" style="border:none;cursor:pointer;background:none;font-size:1rem;"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="p-5 space-y-4">
+      <button onclick="simulateQR()" class="w-full border-2 border-dashed border-emerald-300 rounded-2xl p-6 text-center hover:border-emerald-500 hover:bg-emerald-50 transition" style="background:none;cursor:pointer;font-family:'Outfit',sans-serif;">
+        <div class="text-4xl mb-2">📷</div>
+        <p class="font-semibold text-gray-700">Scan QR Code</p>
+        <p class="text-xs text-gray-400 mt-1">Arahkan kamera ke QR di masjid</p>
+      </button>
+      <div class="ornament-divider text-gray-400 text-sm">atau kode manual</div>
+      <div class="flex gap-2">
+        <input type="text" id="manual-code" class="input-field flex-1" placeholder="Masukkan kode 6 digit" maxlength="6">
+        <button onclick="submitManualCheckin()" class="btn-primary px-4 py-3">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Success Modal -->
+<div id="success-modal" class="modal-bg hidden">
+  <div class="modal-box text-center p-8">
+    <div class="text-6xl mb-4">🎉</div>
+    <h3 class="text-2xl font-bold text-gray-800 mb-2">Check-in Berhasil!</h3>
+    <p class="text-gray-500 mb-4" id="success-activity-name"></p>
+    <div class="bg-emerald-50 rounded-2xl p-4 mb-6 inline-block mx-auto">
+      <p class="text-emerald-600 text-sm">Streak Anda sekarang</p>
+      <p class="text-4xl font-black text-emerald-700" id="success-streak-count">13</p>
+      <p class="text-emerald-600 text-sm">🔥 Hari berturut-turut!</p>
+    </div>
+    <button onclick="closeSuccessModal()" class="btn-primary w-full py-3">Lanjutkan</button>
+  </div>
+</div>
+
+<!-- Package Modal -->
+<div id="package-modal" class="modal-bg hidden">
+  <div class="modal-box">
+    <div class="p-5 border-b border-gray-100 flex items-center gap-3">
+      <div id="package-modal-icon" class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-xl">📦</div>
+      <div>
+        <h3 id="package-modal-title" class="font-bold text-gray-800">Pilih Paket Masjid</h3>
+        <p id="package-mosque-name" class="text-xs text-gray-500"></p>
+      </div>
+      <button onclick="closePackageModal()" class="ml-auto text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100" style="border:none;cursor:pointer;background:none;font-size:1rem;"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="p-5 border-b border-gray-100">
+      <div class="package-mosque-preview">
+        <img id="package-mosque-image" class="package-mosque-image" src="" alt="Foto masjid">
+        <div class="p-4">
+          <p class="text-[11px] uppercase tracking-widest text-emerald-600 font-bold">Profil Masjid</p>
+          <p id="package-mosque-description" class="text-sm text-gray-600 mt-1"></p>
+          <div id="package-mosque-facts" class="package-facts mt-3"></div>
+          <div id="package-mosque-tags" class="flex gap-1.5 mt-3 flex-wrap"></div>
+
+          <div class="mt-4">
+            <p class="text-[11px] uppercase tracking-widest text-slate-500 font-bold">Event Kajian & Kegiatan</p>
+            <div id="package-mosque-events" class="package-event-list mt-2"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div id="package-selection-panel" class="p-5 space-y-3">
+      <button data-package-option="basic" onclick="setPackage('basic')" class="package-option w-full text-left border-2 border-gray-200 rounded-2xl p-4 transition">
+        <div class="flex items-center justify-between mb-1">
+          <p class="font-bold text-gray-800">Basic - Mulai Digital</p>
+          <span class="text-sm font-semibold text-emerald-600">Rp29.000/bulan</span>
+        </div>
+        <p class="text-xs text-gray-500 mb-2">Cocok untuk masjid yang baru mulai go digital.</p>
+        <ul class="package-feature-list text-xs text-gray-600">
+          <li><i class="fas fa-check text-emerald-600"></i>Halaman masjid di dalam Masjid Hub</li>
+          <li><i class="fas fa-check text-emerald-600"></i>Jadwal sholat harian</li>
+          <li><i class="fas fa-check text-emerald-600"></i>Pengumuman kegiatan atau berita masjid</li>
+          <li><i class="fas fa-check text-emerald-600"></i>1 akun admin</li>
+        </ul>
+        <p class="package-focus">Fokus: Informasi masjid agar mudah diakses jamaah.</p>
+      </button>
+
+      <button data-package-option="standard" onclick="setPackage('standard')" class="package-option w-full text-left border-2 border-gray-200 rounded-2xl p-4 transition">
+        <div class="flex items-center justify-between mb-1">
+          <p class="font-bold text-gray-800">Standard - Masjid Aktif</p>
+          <span class="text-sm font-semibold text-sky-600">Rp59.000/bulan</span>
+        </div>
+        <p class="text-xs text-gray-500 mb-2">Cocok untuk masjid dengan kegiatan rutin.</p>
+        <ul class="package-feature-list text-xs text-gray-600">
+          <li><i class="fas fa-check text-emerald-600"></i>Semua fitur Basic</li>
+          <li><i class="fas fa-check text-emerald-600"></i>Kajian dan event</li>
+          <li><i class="fas fa-check text-emerald-600"></i>Galeri masjid</li>
+          <li><i class="fas fa-check text-emerald-600"></i>Form kegiatan (pendaftaran peserta)</li>
+          <li><i class="fas fa-check text-emerald-600"></i>3 akun admin</li>
+        </ul>
+        <p class="package-focus">Fokus: Interaksi dan aktivitas jamaah.</p>
+      </button>
+
+      <button data-package-option="premium" onclick="setPackage('premium')" class="package-option w-full text-left border-2 border-gray-200 rounded-2xl p-4 transition">
+        <div class="flex items-center justify-between mb-1">
+          <div class="flex items-center gap-2">
+            <p class="font-bold text-gray-800">Premium - Masjid Modern</p>
+            <span class="recommended-badge">Rekomendasi</span>
+          </div>
+          <span class="text-sm font-semibold text-purple-600">Rp99.000/bulan</span>
+        </div>
+        <p class="text-xs text-gray-500 mb-2">Cocok untuk masjid besar atau pusat aktivitas.</p>
+        <ul class="package-feature-list text-xs text-gray-600">
+          <li><i class="fas fa-check text-emerald-600"></i>Semua fitur Standard</li>
+          <li><i class="fas fa-check text-emerald-600"></i>Dashboard keuangan</li>
+          <li><i class="fas fa-check text-emerald-600"></i>Donasi online</li>
+          <li><i class="fas fa-check text-emerald-600"></i>Laporan dan riwayat transaksi</li>
+          <li><i class="fas fa-check text-emerald-600"></i>Notifikasi WA/Email</li>
+          <li><i class="fas fa-check text-emerald-600"></i>Booking ruangan</li>
+        </ul>
+        <p class="package-focus">Fokus: Sistem lengkap dan transparansi.</p>
+      </button>
+
+      <div class="package-addon-box">
+        <p class="font-bold text-gray-700 text-xs mb-1">Fitur Tambahan (Khusus Premium / Add-on)</p>
+        <p class="text-xs text-gray-600">UMKM Masjid, Relawan, dan Streak Ibadah.</p>
+      </div>
+
+      <p id="package-summary" class="text-xs text-gray-500 px-1">Basic: informasi masjid. Standard: interaksi jamaah. Premium: sistem lengkap.</p>
+
+      <button onclick="confirmPackageSelection()" class="btn-primary w-full py-3 text-base mt-2">
+        Lanjutkan ke Login
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Locked Feature Modal -->
+<div id="locked-feature-modal" class="modal-bg hidden">
+  <div class="modal-sm">
+    <div class="mb-4 flex items-center gap-3">
+      <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-xl">🔒</div>
+      <div>
+        <h3 class="font-bold text-gray-800">Fitur Terkunci</h3>
+        <p id="locked-feature-message" class="text-xs text-gray-600 mt-0.5">Fitur ini hanya tersedia di paket premium</p>
+      </div>
+    </div>
+    <div id="locked-feature-details" class="bg-gray-50 rounded-xl p-3 mb-4 max-h-48 overflow-y-auto text-xs"></div>
+    <div class="flex gap-2">
+      <button onclick="closeModal('locked-feature-modal')" class="btn-outline flex-1 py-2.5 text-sm">Lanjutkan Sekarang</button>
+    </div>
+    <div id="locked-feature-upgrade-actions" class="locked-upgrade-actions mt-3"></div>
+  </div>
+</div>
+
+<!-- Notification -->
+<div id="notif" class="notif"></div>
+
+<!-- Loading overlay -->
+<div id="loading" class="modal-bg hidden" style="z-index:200;">
+  <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-8 text-center">
+    <div class="spinner mx-auto mb-4"></div>
+    <p class="text-gray-600 font-medium" id="loading-text">Memproses...</p>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════ -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+  const layoutPartials = [
+    { mountId: 'partial-initial', file: 'assets/partials/initial-screen.html' },
+    { mountId: 'partial-login-portal', file: 'assets/partials/login-portal.html' },
+    { mountId: 'partial-dashboard-app', file: 'assets/partials/dashboard-app.html' },
+    { mountId: 'partial-jamaah-profile', file: 'assets/partials/jamaah-profile-modal.html' }
+  ];
+
+  async function loadLayoutPartials() {
+    const requests = layoutPartials.map(async (entry) => {
+      const mount = document.getElementById(entry.mountId);
+      if (!mount) return;
+
+      const response = await fetch(entry.file, { cache: 'no-cache' });
+      if (!response.ok) {
+        throw new Error('Gagal memuat partial: ' + entry.file);
+      }
+
+      mount.innerHTML = await response.text();
+    });
+
+    await Promise.all(requests);
+  }
+
+  function loadMainAppScript() {
+    const script = document.createElement('script');
+    script.src = 'assets/js/masjid.hub.js';
+    document.body.appendChild(script);
+  }
+
+  (async function initPage() {
+    try {
+      await loadLayoutPartials();
+      loadMainAppScript();
+    } catch (error) {
+      console.error(error);
+    }
+  })();
+</script>
+</body>
+</html>
