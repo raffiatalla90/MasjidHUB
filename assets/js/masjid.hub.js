@@ -1,6 +1,6 @@
 // ── DATA ──────────────────────────────────────────────────────────
 const APP_DATA_URL = 'assets/data/masjid.hub.data.json';
-const APP_DATA_VERSION = '2026-03-29-nurulhudauns';
+const APP_DATA_VERSION = '2026-03-30-nurulhudauns-premium';
 
 let MOSQUES = [];
 let TRANSACTIONS = [];
@@ -1106,7 +1106,7 @@ function updateAdminModeUI() {
   const toggle = document.getElementById('admin-live-toggle');
   const panel = document.getElementById('admin-live-panel');
   const appScreen = document.getElementById('app-screen');
-  const isAdmin = activeRole === 'takmir' && !!takmirRegistration?.paid;
+  const isAdmin = isTakmirRoleActive();
   const context = getAdminPanelContext();
   const contextTitle = document.getElementById('admin-live-context-title');
   const contextDesc = document.getElementById('admin-live-context-desc');
@@ -1144,6 +1144,8 @@ function updateAdminModeUI() {
     if (adminTheme === 'ocean') appScreen.classList.add('theme-ocean');
     if (adminTheme === 'sunset') appScreen.classList.add('theme-sunset');
   }
+
+  updateAppLayoutByRole();
 }
 
 function updateAdminPanelFeatureVisibility() {
@@ -1204,6 +1206,32 @@ function applyAdminTheme(theme) {
   adminTheme = theme;
   updateAdminModeUI();
   savePersistentState();
+}
+
+function isTakmirRoleActive() {
+  return activeRole === 'takmir' && !!takmirRegistration?.paid;
+}
+
+function updateAppLayoutByRole() {
+  const appScreen = document.getElementById('app-screen');
+  const publicNav = document.getElementById('public-top-nav');
+  const sidebar = document.getElementById('desktop-sidebar');
+  const sidebarToggle = document.getElementById('mobile-sidebar-toggle');
+  const headerNotifBtn = document.getElementById('header-notif-btn');
+  const mobileSidebar = document.getElementById('mobile-sidebar-el');
+  const mobileOverlay = document.getElementById('mobile-overlay');
+  const takmirLayout = isTakmirRoleActive();
+
+  if (appScreen) appScreen.classList.toggle('public-layout', !takmirLayout);
+  if (publicNav) publicNav.classList.toggle('hidden', takmirLayout);
+  if (sidebar) sidebar.classList.toggle('hidden', !takmirLayout);
+  if (sidebarToggle) sidebarToggle.classList.toggle('hidden', !takmirLayout);
+  if (headerNotifBtn) headerNotifBtn.classList.toggle('hidden', !takmirLayout);
+
+  if (!takmirLayout) {
+    if (mobileSidebar) mobileSidebar.classList.remove('open');
+    if (mobileOverlay) mobileOverlay.classList.add('hidden');
+  }
 }
 
 // ── GENERIC MODAL FUNCTIONS ──────────────────────────────────────
@@ -1771,6 +1799,10 @@ function openPackageModal(mode = 'profile') {
   const factsEl = document.getElementById('package-mosque-facts');
   const tagsEl = document.getElementById('package-mosque-tags');
   const eventsEl = document.getElementById('package-mosque-events');
+  const activeSummaryEl = document.getElementById('package-active-summary');
+  const activeFeatureListEl = document.getElementById('package-active-feature-list');
+  const activeAddonBoxEl = document.getElementById('package-active-addon-box');
+  const activeAddonTextEl = document.getElementById('package-active-addon-text');
 
   if (titleEl) {
     titleEl.textContent = packageModalMode === 'profile' ? 'Profil Masjid' : 'Pilih Paket Masjid';
@@ -1817,6 +1849,24 @@ function openPackageModal(mode = 'profile') {
         </div>
       `).join('');
     }
+  }
+
+  const activePackageKey = String(selectedMosque.package || 'basic').toLowerCase();
+  const activePackageDetails = PACKAGE_FEATURE_DETAILS[activePackageKey] || PACKAGE_FEATURE_DETAILS.basic;
+  if (activeSummaryEl) {
+    activeSummaryEl.textContent = `${activePackageDetails.title} • ${activePackageDetails.price}`;
+  }
+  if (activeFeatureListEl) {
+    activeFeatureListEl.innerHTML = (activePackageDetails.features || []).map(feature =>
+      `<li><i class="fas fa-check text-emerald-600"></i>${escapeHtml(feature)}</li>`
+    ).join('');
+  }
+  const activeAddons = Array.isArray(activePackageDetails.addons) ? activePackageDetails.addons : [];
+  if (activeAddonBoxEl) {
+    activeAddonBoxEl.classList.toggle('hidden', !activeAddons.length);
+  }
+  if (activeAddonTextEl) {
+    activeAddonTextEl.textContent = activeAddons.map(item => item.split('→')[0].trim()).join(', ');
   }
 
   if (packageModalMode !== 'profile') {
@@ -2474,6 +2524,7 @@ function updateRealtimeDashboardStats() {
   document.getElementById('stat-saldo').textContent = fmtRp(selectedMosque.balance);
   document.getElementById('stat-masuk').textContent = fmtRp(selectedMosque.income);
   document.getElementById('stat-keluar').textContent = fmtRp(selectedMosque.expense);
+  renderPublicFinanceHighlights();
 }
 
 function renderAdminIncomeHistory() {
@@ -2512,6 +2563,87 @@ function renderAdminIncomeHistory() {
   if (liveContainer) liveContainer.innerHTML = html;
 }
 
+function renderDashboardPublicMeta() {
+  if (!selectedMosque) return;
+
+  const heroIcon = document.getElementById('dashboard-hero-icon');
+  const heroName = document.getElementById('dashboard-hero-name');
+  const jamaahCount = document.getElementById('dashboard-jamaah-count');
+  const distanceEl = document.getElementById('dashboard-distance');
+  const ratingEl = document.getElementById('dashboard-rating');
+  const subtitleEl = document.getElementById('dashboard-mosque-subtitle');
+
+  if (heroIcon) heroIcon.textContent = selectedMosque.icon || '🕌';
+  if (heroName) heroName.textContent = selectedMosque.name || 'Masjid Pilihan';
+  if (jamaahCount) jamaahCount.textContent = `${Number(selectedMosque.members || 0).toLocaleString('id-ID')} jamaah`;
+  if (distanceEl) distanceEl.textContent = selectedMosque.distance || '-';
+  if (ratingEl) ratingEl.textContent = `Rating ${Number(selectedMosque.rating || 0).toFixed(1)}`;
+  if (subtitleEl) subtitleEl.textContent = `Info ibadah, program, dan transparansi ${selectedMosque.name}`;
+}
+
+function mapExpenseCategory(note = '') {
+  const text = String(note || '').toLowerCase();
+
+  if (/operasional|listrik|air|internet|kebersihan|logistik|administrasi/.test(text)) return 'Operasional Masjid';
+  if (/sosial|dhuafa|bansos|sembako|sedekah|kemanusiaan/.test(text)) return 'Program Sosial';
+  if (/renovasi|perawatan|maintenance|servis|perbaikan|bangunan|cat/.test(text)) return 'Perawatan Fasilitas';
+  if (/kajian|ustadz|dai|pengajar|honor|imam|muadzin|pendidikan|santri|tpq/.test(text)) return 'Kegiatan Ibadah & Pendidikan';
+  return 'Kebutuhan Lainnya';
+}
+
+function renderPublicFinanceHighlights() {
+  if (!selectedMosque) return;
+
+  const totalKeuanganEl = document.getElementById('public-stat-keuangan');
+  const totalPengeluaranEl = document.getElementById('public-stat-pengeluaran');
+  const expenseListEl = document.getElementById('public-expense-list');
+
+  if (totalKeuanganEl) totalKeuanganEl.textContent = fmtRp(Number(selectedMosque.balance || 0));
+  if (totalPengeluaranEl) totalPengeluaranEl.textContent = fmtRp(Number(selectedMosque.expense || 0));
+  if (!expenseListEl) return;
+
+  const outgoing = getRecentTransactionsFeed()
+    .filter(item => item.type === 'out' && Number(item.amount || 0) > 0)
+    .slice(0, 10);
+
+  if (!outgoing.length) {
+    expenseListEl.innerHTML = '<p class="text-xs text-gray-500">Belum ada rincian pengeluaran yang ditampilkan.</p>';
+    return;
+  }
+
+  const grouped = outgoing.reduce((acc, item) => {
+    const key = mapExpenseCategory(item.label || item.category || '');
+    if (!acc[key]) {
+      acc[key] = { total: 0, latestDate: item.date || '-', count: 0 };
+    }
+    acc[key].total += Number(item.amount || 0);
+    acc[key].count += 1;
+    return acc;
+  }, {});
+
+  const groupedRows = Object.entries(grouped)
+    .map(([label, summary]) => ({
+      label,
+      total: summary.total,
+      count: summary.count,
+      latestDate: summary.latestDate,
+    }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 5);
+
+  expenseListEl.innerHTML = groupedRows.map(row => {
+    return `
+      <div class="public-expense-item">
+        <div class="min-w-0 flex-1">
+          <p class="public-expense-item-label">${escapeHtml(row.label)}</p>
+          <p class="public-expense-item-date">${escapeHtml(row.latestDate)} · ${row.count} transaksi</p>
+        </div>
+        <p class="public-expense-item-amount">Rp ${fmtRp(Number(row.total || 0))}</p>
+      </div>
+    `;
+  }).join('');
+}
+
 // ── APP INIT ──────────────────────────────────────────────────────
 function initApp() {
   if (!selectedMosque) return;
@@ -2531,7 +2663,8 @@ function initApp() {
   document.getElementById('stat-saldo').textContent = fmtRp(selectedMosque.balance);
   document.getElementById('stat-masuk').textContent = fmtRp(selectedMosque.income);
   document.getElementById('stat-keluar').textContent = fmtRp(selectedMosque.expense);
-  document.getElementById('dashboard-mosque-subtitle').textContent = `Keuangan ${selectedMosque.name}`;
+  renderDashboardPublicMeta();
+  renderPublicFinanceHighlights();
   document.getElementById('donasi-mosque-name').textContent = selectedMosque.name;
   document.getElementById('kajian-mosque-name').textContent = selectedMosque.name;
   document.getElementById('laporan-mosque-name').textContent = selectedMosque.name;
@@ -2773,7 +2906,7 @@ function navigate(page) {
     renderUnlockedFeatureIndicators();
     savePersistentState();
   }
-  
+
   // Admin feature gating
   if (featureKey && activeRole === 'takmir' && takmirRegistration?.paid) {
     if (!canAccessFeature(featureKey)) {
@@ -2808,6 +2941,10 @@ function navigate(page) {
   document.querySelectorAll('.mobile-nav-item').forEach(n => {
     const onClick = n.getAttribute('onclick') || '';
     n.classList.toggle('active', onClick.includes(`navigate('${page}')`));
+  });
+  // Public top nav
+  document.querySelectorAll('.public-top-nav-item').forEach(n => {
+    n.classList.toggle('active', n.getAttribute('data-public-nav') === page);
   });
   // Page title
   const titles = { dashboard:'Dashboard', donasi:'Donasi', zcorner:'UMKM Masjid', kajian:'Kajian & Acara', market:'Marketplace', relawan:'Relawan', sholat:'Waktu Sholat', streak:'Streak Kebaikan', laporan:'Laporan Keuangan', riwayat:'Riwayat Donasi', booking:'Booking Ruangan' };
@@ -3335,6 +3472,8 @@ function bookRoom(name) {
 
 // ── MOBILE SIDEBAR ────────────────────────────────────────────────
 function toggleMobileSidebar() {
+  if (!isTakmirRoleActive()) return;
+
   const sidebar = document.getElementById('mobile-sidebar-el');
   const overlay = document.getElementById('mobile-overlay');
   const isOpen = sidebar.classList.contains('open');

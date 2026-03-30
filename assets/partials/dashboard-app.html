@@ -9,7 +9,7 @@
     <div class="h-1 bg-gradient-to-r from-emerald-500 via-yellow-400 to-emerald-500"></div>
     <div class="px-4 md:px-6 py-3 flex items-center gap-3">
       <!-- Mobile menu toggle -->
-      <button class="mobile-sidebar-btn w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 transition" onclick="toggleMobileSidebar()">
+      <button id="mobile-sidebar-toggle" class="mobile-sidebar-btn w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 transition" onclick="toggleMobileSidebar()">
         <i class="fas fa-bars"></i>
       </button>
       
@@ -34,13 +34,13 @@
         </button>
 
         <!-- Prayer time quick -->
-        <button onclick="navigate('sholat')" class="hidden md:flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 px-3 py-2 rounded-xl hover:bg-emerald-100 transition border-none cursor-pointer" style="font-family:'Outfit',sans-serif;">
+        <button id="header-prayer-quick" onclick="navigate('sholat')" class="hidden md:flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 px-3 py-2 rounded-xl hover:bg-emerald-100 transition border-none cursor-pointer" style="font-family:'Outfit',sans-serif;">
           <i class="fas fa-clock text-emerald-500"></i>
           <span id="next-prayer-header">Ashar 15:30</span>
         </button>
 
         <!-- Notif bell -->
-        <button class="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 relative hover:bg-emerald-50 hover:text-emerald-700 transition" style="border:none;cursor:pointer;">
+        <button id="header-notif-btn" class="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 relative hover:bg-emerald-50 hover:text-emerald-700 transition" style="border:none;cursor:pointer;">
           <i class="fas fa-bell text-sm"></i>
           <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse border border-white"></span>
         </button>
@@ -55,7 +55,7 @@
   <div class="app-body">
 
     <!-- Desktop Sidebar -->
-    <aside class="sidebar-desktop sidebar w-64 flex-shrink-0 flex flex-col" style="height:calc(100vh - 57px);">
+    <aside id="desktop-sidebar" class="sidebar-desktop sidebar w-64 flex-shrink-0 flex flex-col" style="height:calc(100vh - 57px);">
       <!-- Mosque info in sidebar -->
       <div class="p-4 border-b border-white/10 relative z-10">
         <div class="bg-white/8 rounded-2xl p-3 border border-white/10">
@@ -196,6 +196,17 @@
     <!-- ── Main Content ── -->
     <main class="main-content">
 
+      <nav id="public-top-nav" class="public-top-nav hidden">
+        <button class="public-top-nav-item active" onclick="navigate('dashboard')" data-public-nav="dashboard"><i class="fas fa-home"></i><span>Beranda</span></button>
+        <button class="public-top-nav-item" onclick="navigate('donasi')" data-public-nav="donasi"><i class="fas fa-heart"></i><span>Donasi</span></button>
+        <button class="public-top-nav-item" onclick="navigate('kajian')" data-public-nav="kajian"><i class="fas fa-calendar"></i><span>Kajian</span></button>
+        <button class="public-top-nav-item" onclick="navigate('sholat')" data-public-nav="sholat"><i class="fas fa-clock"></i><span>Sholat</span></button>
+        <button class="public-top-nav-item" onclick="navigate('market')" data-public-nav="market"><i class="fas fa-store"></i><span>Marketplace</span></button>
+        <button class="public-top-nav-item" onclick="navigate('relawan')" data-public-nav="relawan"><i class="fas fa-users"></i><span>Relawan</span></button>
+        <button class="public-top-nav-item" onclick="navigate('streak')" data-public-nav="streak"><i class="fas fa-fire"></i><span>Streak</span></button>
+        <button class="public-top-nav-item" onclick="navigate('riwayat')" data-public-nav="riwayat"><i class="fas fa-history"></i><span>Riwayat</span></button>
+      </nav>
+
       <section id="admin-live-panel" class="card admin-live-panel hidden">
         <div class="admin-live-panel-header">
           <div class="admin-live-header-main">
@@ -294,49 +305,102 @@
       <!-- ─ DASHBOARD ─ -->
       <section id="page-dashboard" class="page-section active">
         <div class="mb-6">
-          <h2 class="text-xl font-bold text-gray-800">Dashboard Keuangan</h2>
+          <h2 class="text-xl font-bold text-gray-800">Beranda Jamaah</h2>
           <p class="text-sm text-gray-500" id="dashboard-mosque-subtitle"></p>
         </div>
 
+        <div class="jamaah-hero-card mb-6">
+          <div class="jamaah-hero-main">
+            <div class="jamaah-hero-icon" id="dashboard-hero-icon">🕌</div>
+            <div>
+              <h3 class="text-base font-bold text-slate-800" id="dashboard-hero-name">Masjid</h3>
+              <p class="text-sm text-slate-600 mt-1">Ringkasan informasi utama untuk jamaah.</p>
+            </div>
+          </div>
+          <div class="jamaah-hero-meta">
+            <div class="jamaah-meta-pill">
+              <i class="fas fa-users text-emerald-600"></i>
+              <span id="dashboard-jamaah-count">0 jamaah</span>
+            </div>
+            <div class="jamaah-meta-pill">
+              <i class="fas fa-location-dot text-sky-600"></i>
+              <span id="dashboard-distance">-</span>
+            </div>
+            <div class="jamaah-meta-pill">
+              <i class="fas fa-star text-amber-500"></i>
+              <span id="dashboard-rating">0.0</span>
+            </div>
+          </div>
+          <div class="jamaah-quick-actions">
+            <button onclick="navigate('donasi')" class="btn-primary px-4 py-2 text-sm rounded-xl">Donasi Sekarang</button>
+          </div>
+        </div>
+
+        <div class="card p-5 mb-6 public-only-block">
+          <div class="flex items-start justify-between gap-3 mb-4">
+            <div>
+              <h3 class="font-bold text-gray-800">Ringkasan Keuangan Masjid</h3>
+              <p class="text-xs text-gray-500 mt-1">Transparansi dana dan pengeluaran untuk jamaah.</p>
+            </div>
+            <button onclick="navigate('donasi')" class="btn-outline px-3 py-2 text-xs rounded-xl">Lihat Donasi</button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+            <div class="public-finance-stat">
+              <p class="text-[11px] uppercase tracking-wider text-slate-500">Total Keuangan</p>
+              <p class="text-xl font-extrabold text-slate-800 mt-1">Rp <span id="public-stat-keuangan">0</span></p>
+            </div>
+            <div class="public-finance-stat public-finance-stat-expense">
+              <p class="text-[11px] uppercase tracking-wider text-red-500">Total Pengeluaran</p>
+              <p class="text-xl font-extrabold text-red-600 mt-1">Rp <span id="public-stat-pengeluaran">0</span></p>
+            </div>
+          </div>
+
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Pengeluaran Untuk</p>
+            <div id="public-expense-list" class="space-y-2"></div>
+          </div>
+        </div>
+
         <!-- Stats grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 stagger">
+        <div id="dashboard-finance-summary" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 stagger public-optional">
           <div class="prayer-card p-5 relative z-10">
-            <p class="text-emerald-200 text-xs uppercase tracking-wider">Total Saldo Kas</p>
+            <p class="text-emerald-200 text-xs uppercase tracking-wider">Dana Masjid</p>
             <p class="text-2xl font-bold text-white mt-1">Rp <span id="stat-saldo">125.450.000</span></p>
-            <p class="text-xs text-emerald-300 mt-3"><i class="fas fa-arrow-up mr-1"></i>+12% dari bulan lalu</p>
+            <p class="text-xs text-emerald-300 mt-3">Informasi total saldo</p>
           </div>
           <div class="card p-5 border-l-4 border-green-500">
-            <p class="text-gray-400 text-xs uppercase tracking-wider">Pemasukan Bulan Ini</p>
+            <p class="text-gray-400 text-xs uppercase tracking-wider">Donasi Terkumpul</p>
             <p class="text-2xl font-bold text-gray-800 mt-1">Rp <span id="stat-masuk">45.200.000</span></p>
-            <p class="text-xs text-green-600 mt-3"><i class="fas fa-mosque mr-1"></i>Infaq Jumat & Donasi Online</p>
+            <p class="text-xs text-green-600 mt-3">Pemasukan bulan berjalan</p>
           </div>
           <div class="card p-5 border-l-4 border-red-400">
-            <p class="text-gray-400 text-xs uppercase tracking-wider">Pengeluaran Bulan Ini</p>
+            <p class="text-gray-400 text-xs uppercase tracking-wider">Program Tersalurkan</p>
             <p class="text-2xl font-bold text-gray-800 mt-1">Rp <span id="stat-keluar">18.500.000</span></p>
-            <p class="text-xs text-red-500 mt-3"><i class="fas fa-tools mr-1"></i>Operasional & Program Sosial</p>
+            <p class="text-xs text-red-500 mt-3">Pengeluaran bulan berjalan</p>
           </div>
         </div>
 
         <!-- Chart + Recent TX -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div id="dashboard-finance-charts" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 public-optional">
           <div class="card p-5 md:col-span-2">
             <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2">
-              <i class="fas fa-chart-line text-emerald-500"></i> Arus Kas 6 Bulan
+              <i class="fas fa-chart-line text-emerald-500"></i> Tren Donasi & Penyaluran
             </h3>
             <div style="height:200px;"><canvas id="finance-chart"></canvas></div>
           </div>
           <div class="card p-5">
             <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2">
-              <i class="fas fa-chart-pie text-emerald-500"></i> Distribusi
+              <i class="fas fa-chart-pie text-emerald-500"></i> Komposisi Dana
             </h3>
             <div style="height:200px;"><canvas id="pie-chart"></canvas></div>
           </div>
         </div>
 
         <!-- Recent transactions -->
-        <div class="card p-5">
+        <div id="dashboard-recent-activity" class="card p-5 public-optional">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-gray-700 flex items-center gap-2"><i class="fas fa-exchange-alt text-emerald-500"></i> Transaksi Terbaru</h3>
+            <h3 class="font-bold text-gray-700 flex items-center gap-2"><i class="fas fa-heart-circle-check text-emerald-500"></i> Aktivitas Donasi Terbaru</h3>
             <button onclick="navigate('riwayat')" class="text-xs text-emerald-600 font-semibold hover:underline" style="background:none;border:none;cursor:pointer;font-family:'Outfit',sans-serif;">Lihat Semua</button>
           </div>
           <div id="recent-tx"></div>
