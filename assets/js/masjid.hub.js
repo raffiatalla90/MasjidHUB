@@ -1,6 +1,6 @@
 // ── DATA ──────────────────────────────────────────────────────────
 const APP_DATA_URL = 'assets/data/masjid.hub.data.json';
-const APP_DATA_VERSION = '2026-03-30-nurulhudauns-premium';
+const APP_DATA_VERSION = '2026-03-30-public-ui-cleanup';
 
 let MOSQUES = [];
 let TRANSACTIONS = [];
@@ -20,7 +20,6 @@ const DEFAULT_CURRENT_USER = { name:'Ahmad Nur', role:'Mahasiswa', avatar:'A', e
 let currentUser = { ...DEFAULT_CURRENT_USER };
 let currentPage = 'dashboard';
 let currentTab = 'all';
-let marketTab = 'all';
 let streak = { current:12, longest:28, total:156 };
 let financeChart, pieChart, incomeChart, expenseChart;
 let mosqueMap = null;
@@ -106,7 +105,6 @@ const PACKAGE_FEATURES = {
     'notifikasi',
     'booking',
     'umkm',
-    'marketplace',
     'relawan',
     'streak'
   ]
@@ -162,7 +160,6 @@ const PAGE_FEATURE_MAP = {
   'donasi': 'donasi',
   'zcorner': 'umkm',
   'kajian': 'kajian',
-  'market': 'marketplace',
   'relawan': 'relawan',
   'sholat': 'jadwal-sholat',
   'streak': 'streak',
@@ -189,7 +186,6 @@ const FEATURE_LABELS = {
   notifikasi: 'Notifikasi jamaah',
   booking: 'Booking ruangan',
   umkm: 'UMKM masjid',
-  marketplace: 'Marketplace',
   relawan: 'Program relawan',
   streak: 'Streak ibadah'
 };
@@ -2770,7 +2766,6 @@ function initApp() {
     renderCampaigns();
     renderVouchers();
     renderEvents();
-    renderMarket('all');
     renderVolunteers();
     renderRooms();
     renderPrayers();
@@ -3003,11 +2998,6 @@ function updateNavItemsVisibility() {
 
 // ── NAVIGATION ────────────────────────────────────────────────────
 function navigate(page) {
-  if (page === 'market') {
-    showNotif('Fitur Marketplace sedang dinonaktifkan sementara.', 'info');
-    return;
-  }
-
   const featureKey = PAGE_FEATURE_MAP[page];
 
   if (newlyUnlockedPages.includes(page)) {
@@ -3056,7 +3046,7 @@ function navigate(page) {
     n.classList.toggle('active', n.getAttribute('data-public-nav') === page);
   });
   // Page title
-  const titles = { dashboard:'Dashboard', donasi:'Donasi', zcorner:'UMKM Masjid', kajian:'Kajian & Acara', market:'Marketplace', relawan:'Relawan', sholat:'Waktu Sholat', streak:'Streak Kebaikan', laporan:'Laporan Keuangan', riwayat:'Riwayat Donasi', booking:'Booking Ruangan' };
+  const titles = { dashboard:'Dashboard', donasi:'Donasi', zcorner:'UMKM Masjid', kajian:'Kajian & Acara', relawan:'Relawan', sholat:'Waktu Sholat', streak:'Streak Kebaikan', laporan:'Laporan Keuangan', riwayat:'Riwayat Donasi', booking:'Booking Ruangan' };
   document.getElementById('page-title').textContent = titles[page] || '';
   updateAdminModeUI();
   
@@ -3233,30 +3223,6 @@ function renderEvents() {
       </div>
     </div>`;
   }).join('');
-}
-
-function renderMarket(tab) {
-  const el = document.getElementById('market-list');
-  if (!el) return;
-  const filtered = tab === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.cat === tab);
-  el.innerHTML = filtered.map(p => `
-    <div class="market-card">
-      <div class="h-28 flex items-center justify-center text-4xl" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7)">${p.emoji}</div>
-      <div class="p-3">
-        <p class="font-semibold text-sm text-gray-800 truncate">${p.name}</p>
-        <p class="text-xs text-gray-400 mb-1">${p.seller}</p>
-        <p class="font-bold text-emerald-600 text-sm">Rp ${p.price.toLocaleString('id')}</p>
-        <p class="text-xs text-gray-400 mb-2">Terjual ${p.sold}x</p>
-        <button onclick="buyProduct('${p.name}')" class="btn-primary w-full py-2 text-xs rounded-xl">Beli</button>
-      </div>
-    </div>`).join('');
-}
-
-function setMarketTab(btn, tab) {
-  document.querySelectorAll('#page-market .tab-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  marketTab = tab;
-  renderMarket(tab);
 }
 
 function renderVolunteers() {
