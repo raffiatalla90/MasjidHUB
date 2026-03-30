@@ -94,10 +94,6 @@
             <div class="w-8 h-8 rounded-lg bg-emerald-600/40 flex items-center justify-center flex-shrink-0"><i class="fas fa-calendar-alt text-xs text-emerald-200"></i></div>
             <span class="text-sm font-medium">Kajian & Acara</span>
           </div>
-          <div class="nav-item" onclick="navigate('market')">
-            <div class="w-8 h-8 rounded-lg bg-emerald-600/40 flex items-center justify-center flex-shrink-0"><i class="fas fa-store text-xs text-emerald-200"></i></div>
-            <span class="text-sm font-medium">Marketplace</span>
-          </div>
           <div class="nav-item" onclick="navigate('relawan')">
             <div class="w-8 h-8 rounded-lg bg-emerald-600/40 flex items-center justify-center flex-shrink-0"><i class="fas fa-users text-xs text-emerald-200"></i></div>
             <span class="text-sm font-medium">Relawan</span>
@@ -174,7 +170,6 @@
         <div class="mobile-menu-group">
           <p class="mobile-menu-title">Komunitas</p>
           <button class="mobile-nav-item" onclick="navigate('kajian');toggleMobileSidebar()"><i class="fas fa-calendar-alt w-5 text-center text-xs"></i><span class="text-sm">Kajian</span></button>
-          <button class="mobile-nav-item" onclick="navigate('market');toggleMobileSidebar()"><i class="fas fa-store w-5 text-center text-xs"></i><span class="text-sm">Marketplace</span></button>
           <button class="mobile-nav-item" onclick="navigate('relawan');toggleMobileSidebar()"><i class="fas fa-users w-5 text-center text-xs"></i><span class="text-sm">Relawan</span></button>
         </div>
         <div class="mobile-menu-group">
@@ -201,7 +196,6 @@
         <button class="public-top-nav-item" onclick="navigate('donasi')" data-public-nav="donasi"><i class="fas fa-heart"></i><span>Donasi</span></button>
         <button class="public-top-nav-item" onclick="navigate('kajian')" data-public-nav="kajian"><i class="fas fa-calendar"></i><span>Kajian</span></button>
         <button class="public-top-nav-item" onclick="navigate('sholat')" data-public-nav="sholat"><i class="fas fa-clock"></i><span>Sholat</span></button>
-        <button class="public-top-nav-item" onclick="navigate('market')" data-public-nav="market"><i class="fas fa-store"></i><span>Marketplace</span></button>
         <button class="public-top-nav-item" onclick="navigate('relawan')" data-public-nav="relawan"><i class="fas fa-users"></i><span>Relawan</span></button>
         <button class="public-top-nav-item" onclick="navigate('streak')" data-public-nav="streak"><i class="fas fa-fire"></i><span>Streak</span></button>
         <button class="public-top-nav-item" onclick="navigate('riwayat')" data-public-nav="riwayat"><i class="fas fa-history"></i><span>Riwayat</span></button>
@@ -483,7 +477,7 @@
       </section>
 
       <!-- ─ MARKETPLACE ─ -->
-      <section id="page-market" class="page-section">
+      <section id="page-market" class="page-section market-disabled">
         <div class="mb-6">
           <h2 class="text-xl font-bold text-gray-800">Marketplace Masjid</h2>
           <p class="text-sm text-gray-500">Produk dari jamaah & UMKM binaan masjid</p>
@@ -648,10 +642,6 @@
       <div class="bottom-nav-item" onclick="navigate('sholat')" id="bn-sholat">
         <i class="fas fa-moon text-lg"></i>
         <span>Sholat</span>
-      </div>
-      <div class="bottom-nav-item" onclick="navigate('market')" id="bn-market">
-        <i class="fas fa-store text-lg"></i>
-        <span>Market</span>
       </div>
       <div class="bottom-nav-item" onclick="navigate('relawan')" id="bn-relawan">
         <i class="fas fa-users text-lg"></i>

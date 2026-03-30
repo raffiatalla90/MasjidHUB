@@ -394,7 +394,8 @@
       width:3px; background: var(--green-light); border-radius:99px;
     }
     .nav-item.feature-unlocked,
-    .bottom-nav-item.feature-unlocked {
+    .bottom-nav-item.feature-unlocked,
+    .public-top-nav-item.feature-unlocked {
       position:relative;
       animation:featureUnlockedPulse 1.4s ease 2;
     }
@@ -421,6 +422,12 @@
       min-width:34px;
       padding:2px 6px;
       font-size:.55rem;
+    }
+    .public-top-nav-item .feature-unlocked-badge {
+      margin-left: 4px;
+      min-width: 30px;
+      padding: 2px 6px;
+      font-size: .55rem;
     }
     @keyframes featureUnlockedPulse {
       0% { transform:scale(1); box-shadow:0 0 0 rgba(16,185,129,0); }
@@ -671,6 +678,7 @@
     /* ── Section pages ── */
     .page-section { display:none; }
     .page-section.active { display:block; animation:fadeUp .4s ease; }
+    .market-disabled { display:none !important; }
 
     /* ── Splash screen ── */
     #splash { background:linear-gradient(160deg,var(--green-deep) 0%,var(--green-dark) 60%,var(--green-mid) 100%); }

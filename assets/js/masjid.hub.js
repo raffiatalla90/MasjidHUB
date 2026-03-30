@@ -150,7 +150,6 @@ const PACKAGE_FEATURE_DETAILS = {
       'Notifikasi (WA/Email) → Update otomatis ke jamaah',
       'Booking ruangan → Reservasi aula / tempat kegiatan',
       'UMKM Masjid → Wadah jualan jamaah',
-      'Marketplace → Jual beli produk islami',
       'Relawan → Manajemen volunteer kegiatan',
       'Streak Ibadah → Fitur motivasi ibadah jamaah'
     ],
@@ -290,7 +289,7 @@ function getUnlockedPagesForUpgrade(fromPkg, toPkg) {
 
 function renderUnlockedFeatureIndicators() {
   document.querySelectorAll('.feature-unlocked-badge').forEach(el => el.remove());
-  document.querySelectorAll('.nav-item, .bottom-nav-item').forEach(el => el.classList.remove('feature-unlocked'));
+  document.querySelectorAll('.nav-item, .bottom-nav-item, .public-top-nav-item').forEach(el => el.classList.remove('feature-unlocked'));
 
   newlyUnlockedPages.forEach(page => {
     document.querySelectorAll(`[onclick*="navigate('${page}')"]`).forEach(el => {
@@ -301,6 +300,58 @@ function renderUnlockedFeatureIndicators() {
       el.appendChild(badge);
     });
   });
+}
+
+function getCurrentPackageForUpgrade() {
+  if (isTakmirRoleActive() && takmirRegistration?.package) return takmirRegistration.package;
+  if (selectedMosque?.package) return selectedMosque.package;
+  return 'basic';
+}
+
+function upgradeSelectedMosquePackage(targetPkg) {
+  if (!selectedMosque) {
+    showNotif('Pilih masjid terlebih dahulu.', 'error');
+    return;
+  }
+
+  const currentPkg = String(selectedMosque.package || 'basic').toLowerCase();
+  if (!targetPkg || targetPkg === currentPkg) {
+    showNotif('Paket saat ini sudah aktif.', 'info');
+    return;
+  }
+
+  const unlockedPages = getUnlockedPagesForUpgrade(currentPkg, targetPkg);
+
+  selectedMosque.package = targetPkg;
+  const mosqueIndex = MOSQUES.findIndex(item => Number(item.id) === Number(selectedMosque.id));
+  if (mosqueIndex >= 0) {
+    MOSQUES[mosqueIndex] = { ...MOSQUES[mosqueIndex], package: targetPkg };
+    selectedMosque = MOSQUES[mosqueIndex];
+  }
+
+  if (takmirRegistration && Number(takmirRegistration.mosqueId) === Number(selectedMosque.id)) {
+    takmirRegistration.package = targetPkg;
+    takmirRegistration.paid = true;
+    takmirSelectedPackage = targetPkg;
+    takmirRegistration.mosqueData = {
+      ...(takmirRegistration.mosqueData || {}),
+      package: targetPkg,
+    };
+  }
+
+  newlyUnlockedPages = [...new Set([...newlyUnlockedPages, ...unlockedPages])];
+  updateJamaahUIByPackage();
+  updateMosquePackageInfoDisplay();
+  renderUnlockedFeatureIndicators();
+  savePersistentState();
+
+  showNotif(`✅ Pembayaran berhasil! Paket ${targetPkg.toUpperCase()} aktif.`, 'success');
+
+  if (pendingLockedFeaturePage) {
+    const pageToOpen = pendingLockedFeaturePage;
+    pendingLockedFeaturePage = null;
+    navigate(pageToOpen);
+  }
 }
 
 function renderJamaahProfileSummary() {
@@ -714,6 +765,7 @@ function hydrateDefaultTakmirLoginInfo() {
 
 function hydrateTakmirForm() {
   hydrateDefaultTakmirLoginInfo();
+  bindTakmirRegistrationDraftPersistence();
 
   if (!takmirRegistration) {
     setTakmirPackage(takmirSelectedPackage || 'basic');
@@ -738,6 +790,55 @@ function hydrateTakmirForm() {
   updateTakmirLocationUI();
   setTakmirPackage(takmirRegistration.package || 'basic');
   syncTakmirPaymentUI();
+}
+
+function syncTakmirRegistrationDraftFromForm() {
+  const mosqueName = document.getElementById('reg-mosque-name')?.value.trim() || '';
+  const city = document.getElementById('reg-mosque-city')?.value.trim() || '';
+  const address = document.getElementById('reg-mosque-address')?.value.trim() || '';
+  const adminName = document.getElementById('reg-admin-name')?.value.trim() || '';
+  const email = document.getElementById('reg-admin-email')?.value.trim().toLowerCase() || '';
+  const phone = document.getElementById('reg-admin-phone')?.value.trim() || '';
+  const password = document.getElementById('reg-admin-password')?.value || '';
+
+  takmirRegistration = {
+    ...(takmirRegistration || {}),
+    mosqueName,
+    city,
+    address,
+    adminName,
+    email,
+    phone,
+    password,
+    package: takmirRegistration?.package || takmirSelectedPackage || 'basic',
+    paid: takmirRegistration?.paid ?? false,
+    financeRecords: Array.isArray(takmirRegistration?.financeRecords) ? takmirRegistration.financeRecords : [],
+    customEvents: Array.isArray(takmirRegistration?.customEvents) ? takmirRegistration.customEvents : [],
+  };
+
+  savePersistentState();
+}
+
+function bindTakmirRegistrationDraftPersistence() {
+  const fieldIds = [
+    'reg-mosque-name',
+    'reg-mosque-city',
+    'reg-mosque-address',
+    'reg-admin-name',
+    'reg-admin-email',
+    'reg-admin-phone',
+    'reg-admin-password'
+  ];
+
+  fieldIds.forEach(fieldId => {
+    const input = document.getElementById(fieldId);
+    if (!input || input.dataset.autosaveBound === 'true') return;
+
+    const syncDraft = () => syncTakmirRegistrationDraftFromForm();
+    input.addEventListener('input', syncDraft);
+    input.addEventListener('change', syncDraft);
+    input.dataset.autosaveBound = 'true';
+  });
 }
 
 function updateTakmirLocationUI() {
@@ -833,6 +934,20 @@ function autofillTakmirAddressFromReverseGeocode(payload = {}) {
   if (addressInput && !addressInput.value.trim() && addressCandidate) {
     addressInput.value = addressCandidate;
     changed = true;
+  }
+
+  if (changed) {
+    if (!takmirRegistration || typeof takmirRegistration !== 'object') {
+      takmirRegistration = {
+        package: takmirSelectedPackage || 'basic',
+        paid: false,
+        financeRecords: [],
+        customEvents: [],
+      };
+    }
+    takmirRegistration.city = cityInput?.value.trim() || takmirRegistration.city || '';
+    takmirRegistration.address = addressInput?.value.trim() || takmirRegistration.address || '';
+    savePersistentState();
   }
 
   if (changed) {
@@ -1352,10 +1467,10 @@ function updateJamaahUIByPackage() {
     
     document.querySelectorAll(`[onclick*="navigate('${page}')"]`).forEach(el => {
       if (!canAccess) {
-        el.style.opacity = '0.3';
-        el.style.pointerEvents = 'none';
+        el.style.opacity = '0.45';
+        el.style.pointerEvents = 'auto';
         el.setAttribute('data-locked', 'true');
-        el.title = `Hanya tersedia di paket ${requiredPkg.toUpperCase()}`;
+        el.title = `Terkunci. Klik untuk upgrade ke ${requiredPkg.toUpperCase()}`;
       } else {
         el.style.opacity = '1';
         el.style.pointerEvents = 'auto';
@@ -1381,6 +1496,7 @@ setTimeout(async () => {
     selectedMosque = MOSQUES.find(m => m.id === selectedMosqueIdPersisted) || null;
   }
   hydrateTakmirForm();
+  bindTakmirRegistrationDraftPersistence();
   ensureMosqueSelectorReady();
   updateAuthUI();
 
@@ -1799,10 +1915,6 @@ function openPackageModal(mode = 'profile') {
   const factsEl = document.getElementById('package-mosque-facts');
   const tagsEl = document.getElementById('package-mosque-tags');
   const eventsEl = document.getElementById('package-mosque-events');
-  const activeSummaryEl = document.getElementById('package-active-summary');
-  const activeFeatureListEl = document.getElementById('package-active-feature-list');
-  const activeAddonBoxEl = document.getElementById('package-active-addon-box');
-  const activeAddonTextEl = document.getElementById('package-active-addon-text');
 
   if (titleEl) {
     titleEl.textContent = packageModalMode === 'profile' ? 'Profil Masjid' : 'Pilih Paket Masjid';
@@ -1849,24 +1961,6 @@ function openPackageModal(mode = 'profile') {
         </div>
       `).join('');
     }
-  }
-
-  const activePackageKey = String(selectedMosque.package || 'basic').toLowerCase();
-  const activePackageDetails = PACKAGE_FEATURE_DETAILS[activePackageKey] || PACKAGE_FEATURE_DETAILS.basic;
-  if (activeSummaryEl) {
-    activeSummaryEl.textContent = `${activePackageDetails.title} • ${activePackageDetails.price}`;
-  }
-  if (activeFeatureListEl) {
-    activeFeatureListEl.innerHTML = (activePackageDetails.features || []).map(feature =>
-      `<li><i class="fas fa-check text-emerald-600"></i>${escapeHtml(feature)}</li>`
-    ).join('');
-  }
-  const activeAddons = Array.isArray(activePackageDetails.addons) ? activePackageDetails.addons : [];
-  if (activeAddonBoxEl) {
-    activeAddonBoxEl.classList.toggle('hidden', !activeAddons.length);
-  }
-  if (activeAddonTextEl) {
-    activeAddonTextEl.textContent = activeAddons.map(item => item.split('→')[0].trim()).join(', ');
   }
 
   if (packageModalMode !== 'profile') {
@@ -2731,7 +2825,7 @@ function showLockedFeatureModal(page) {
   const detailsEl = document.getElementById('locked-feature-details');
   const upgradeActions = document.getElementById('locked-feature-upgrade-actions');
   const order = ['basic', 'standard', 'premium'];
-  const currentPkg = takmirRegistration?.package || 'basic';
+  const currentPkg = getCurrentPackageForUpgrade();
   const currentIndex = order.indexOf(currentPkg);
   const upgradeOptions = order.filter((pkg, index) => index > currentIndex);
   
@@ -2773,14 +2867,16 @@ function showLockedFeatureModal(page) {
   }
   
   if (upgradeActions) {
-    if (!(activeRole === 'takmir' && takmirRegistration)) {
-      upgradeActions.innerHTML = '<p class="text-xs text-gray-500 text-center">Login sebagai takmir untuk melakukan upgrade paket.</p>';
+    if (!selectedMosque && !(activeRole === 'takmir' && takmirRegistration)) {
+      upgradeActions.innerHTML = '<p class="text-xs text-gray-500 text-center">Pilih masjid terlebih dahulu untuk melanjutkan pembayaran.</p>';
+    } else if (!upgradeOptions.length) {
+      upgradeActions.innerHTML = '<p class="text-xs text-gray-500 text-center">Paket tertinggi sudah aktif.</p>';
     } else {
       upgradeActions.innerHTML = upgradeOptions.map(pkgKey => {
         const pkg = PACKAGE_FEATURE_DETAILS[pkgKey];
         return `
           <button class="locked-upgrade-btn" onclick="handleLockedFeatureUpgrade('${pkgKey}')">
-            <strong>Upgrade ke ${pkgKey.toUpperCase()}</strong>
+            <strong>Lanjut Pembayaran ${pkgKey.toUpperCase()}</strong>
             <span>${pkg.price} • ${pkg.focus}</span>
           </button>
         `;
@@ -2793,7 +2889,15 @@ function showLockedFeatureModal(page) {
 
 function handleLockedFeatureUpgrade(targetPkg) {
   closeModal('locked-feature-modal');
-  upgradeTakmirPackage(targetPkg);
+  showLoading('Memproses pembayaran paket...');
+  setTimeout(() => {
+    hideLoading();
+    if (isTakmirRoleActive()) {
+      upgradeTakmirPackage(targetPkg);
+      return;
+    }
+    upgradeSelectedMosquePackage(targetPkg);
+  }, 900);
 }
 
 function showUpgradePackageFlow(targetPkg) {
@@ -2899,6 +3003,11 @@ function updateNavItemsVisibility() {
 
 // ── NAVIGATION ────────────────────────────────────────────────────
 function navigate(page) {
+  if (page === 'market') {
+    showNotif('Fitur Marketplace sedang dinonaktifkan sementara.', 'info');
+    return;
+  }
+
   const featureKey = PAGE_FEATURE_MAP[page];
 
   if (newlyUnlockedPages.includes(page)) {
@@ -2920,7 +3029,7 @@ function navigate(page) {
     const jamaahFeatures = getJamaahAvailableFeatures();
     const featureRequired = PAGE_FEATURE_MAP[page] || page;
     if (!jamaahFeatures.includes(featureRequired)) {
-      showNotif(`📢 Fitur \"${page}\" tidak tersedia di paket masjid ini.`, 'info');
+      showLockedFeatureModal(page);
       return;
     }
   }
