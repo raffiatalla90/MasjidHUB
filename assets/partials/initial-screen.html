@@ -1,0 +1,63 @@
+<!-- Splash Screen -->
+<div id="splash" class="screen flex flex-col items-center justify-center">
+  <div class="geo-pattern absolute inset-0 opacity-30"></div>
+  <div class="relative z-10 text-center animate-float">
+    <img src="MasjidHUB-Logo.png" alt="Logo Masjid HUB" class="brand-logo-splash mx-auto mb-6" loading="eager">
+    <p class="text-emerald-200 text-sm font-medium tracking-widest uppercase">Platform Digital Ekosistem Masjid</p>
+    <div class="mt-10 flex items-center justify-center gap-2">
+      <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+      <div class="w-2 h-2 bg-emerald-300 rounded-full animate-pulse" style="animation-delay:.2s"></div>
+      <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" style="animation-delay:.4s"></div>
+    </div>
+  </div>
+  <p class="absolute bottom-8 text-emerald-400 text-xs">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ</p>
+</div>
+
+<!-- Portal Screen -->
+<div id="role-screen" class="screen hidden overflow-y-auto">
+  <div class="min-h-full bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-900 geo-pattern p-6 flex items-center justify-center">
+    <div class="w-full max-w-5xl role-hero">
+      <div class="text-center mb-7">
+        <span class="role-welcome-badge">MENU AWAL</span>
+        <h2 style="font-family:'Amiri',serif;font-size:2.35rem;color:white;font-weight:700;">Pilih Akses Anda</h2>
+        <p class="text-emerald-200 text-base mt-2">Kami buat sederhana supaya mudah digunakan semua usia</p>
+      </div>
+
+      <div class="role-main-grid">
+        <div class="role-guide-card">
+          <h3 class="role-guide-title">Panduan Cepat</h3>
+          <div class="role-step-list">
+            <div class="role-step-item">
+              <span class="role-step-no">1</span>
+              <p>Pilih tombol sesuai kebutuhan Anda.</p>
+            </div>
+            <div class="role-step-item">
+              <span class="role-step-no">2</span>
+              <p>Jika Anda jamaah, masuk lalu pilih masjid.</p>
+            </div>
+            <div class="role-step-item">
+              <span class="role-step-no">3</span>
+              <p>Jika Anda pengurus, daftar masjid untuk kelola dashboard.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="role-choice-grid">
+          <button onclick="startJamaahFlow()" class="role-choice-card role-choice-jamaah" style="font-family:'Outfit',sans-serif;" aria-label="Masuk sebagai Jamaah">
+            <div class="role-choice-icon" aria-hidden="true">👥</div>
+            <h3 class="role-choice-title">Masuk Sebagai Jamaah</h3>
+            <p class="role-choice-desc">Untuk jamaah umum, keluarga, dan masyarakat.</p>
+            <span class="btn-primary role-choice-action">Login Jamaah</span>
+          </button>
+
+          <button onclick="startTakmirFlow()" class="role-choice-card role-choice-takmir" style="font-family:'Outfit',sans-serif;" aria-label="Daftar sebagai Pengurus Masjid">
+            <div class="role-choice-icon" aria-hidden="true">🧾</div>
+            <h3 class="role-choice-title">Masuk Sebagai Pengurus</h3>
+            <p class="role-choice-desc">Untuk takmir/pengurus yang mengelola masjid.</p>
+            <span class="btn-outline role-choice-action">Daftar Pengurus</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
